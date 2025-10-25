@@ -61,7 +61,7 @@ export function StoryDetailScreen({
   const isMyTurn = story.currentTurnUserId === userProfile.userId;
   const lastThreeWords = story.entries.slice(-3).map(e => e.word);
 
-  const handleAddWord = () => {
+  const handleAddWord = async () => {
     const trimmedWord = newWord.trim();
     if (trimmedWord) {
       // Validate it's a single word
@@ -70,21 +70,21 @@ export function StoryDetailScreen({
         // Show error - only one word allowed
         return;
       }
-      addWord(storyId, trimmedWord);
+      await addWord(storyId, trimmedWord);
       setNewWord("");
       setShowInput(false);
     }
   };
 
-  const handleFinishStory = () => {
-    finishStory(storyId);
+  const handleFinishStory = async () => {
+    await finishStory(storyId);
     setShowFinishModal(false);
     // Navigate to reveal screen
     navigation.navigate("StoryReveal", { storyId });
   };
 
-  const handleDeleteStory = () => {
-    deleteStory(storyId);
+  const handleDeleteStory = async () => {
+    await deleteStory(storyId);
     setShowDeleteModal(false);
     navigation.goBack();
   };
