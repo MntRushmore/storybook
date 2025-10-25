@@ -6,7 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { CreateStoryModal } from "../components/CreateStoryModal";
 import { SetupProfileModal } from "../components/SetupProfileModal";
-import { getTodayPrompt } from "../utils/dailyPrompts";
+import { getTodayPrompt, getRandomPrompt } from "../utils/dailyPrompts";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -17,16 +17,20 @@ type HomeScreenProps = {
 export function HomeScreen({ navigation }: HomeScreenProps) {
   const insets = useSafeAreaInsets();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [currentPrompt, setCurrentPrompt] = useState(getTodayPrompt());
   const userProfile = useStoryStore(s => s.userProfile);
   const stories = useStoryStore(s => s.stories);
   const createStory = useStoryStore(s => s.createStory);
 
-  const todayPrompt = useMemo(() => getTodayPrompt(), []);
   const activeStories = useMemo(() => stories.filter(s => !s.isFinished), [stories]);
 
   const handleUsePrompt = () => {
-    const storyId = createStory(todayPrompt);
+    const storyId = createStory(currentPrompt);
     navigation.navigate("StoryDetail", { storyId });
+  };
+
+  const handleShufflePrompt = () => {
+    setCurrentPrompt(getRandomPrompt());
   };
 
   if (!userProfile) {
@@ -60,8 +64,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 
       <ScrollView className="flex-1 px-6 pt-6">
         {/* Daily Prompt Card */}
-        <Pressable
-          onPress={handleUsePrompt}
+        <View
           className="bg-gradient-to-br from-[#D4A5A5] to-[#C98686] rounded-2xl p-5 mb-6 shadow-sm"
           style={{
             backgroundColor: "#D4A5A5",
@@ -72,24 +75,34 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             elevation: 3,
           }}
         >
-          <View className="flex-row items-center mb-3">
-            <View className="bg-white/30 rounded-full p-2 mr-3">
-              <Ionicons name="bulb" size={20} color="white" />
+          <View className="flex-row items-center justify-between mb-3">
+            <View className="flex-row items-center flex-1">
+              <View className="bg-white/30 rounded-full p-2 mr-3">
+                <Ionicons name="bulb" size={20} color="white" />
+              </View>
+              <Text className="text-white font-semibold text-base">
+                {"Today's Prompt"}
+              </Text>
             </View>
-            <Text className="text-white font-semibold text-base">
-              {"Today's Prompt"}
-            </Text>
+            <Pressable
+              onPress={handleShufflePrompt}
+              className="bg-white/30 rounded-full p-2"
+            >
+              <Ionicons name="shuffle" size={20} color="white" />
+            </Pressable>
           </View>
-          <Text className="text-white text-lg font-bold mb-2">
-            {todayPrompt}
-          </Text>
-          <View className="flex-row items-center">
-            <Text className="text-white/90 text-sm mr-2">
-              Tap to start writing
+          <Pressable onPress={handleUsePrompt}>
+            <Text className="text-white text-lg font-bold mb-2">
+              {currentPrompt}
             </Text>
-            <Ionicons name="arrow-forward" size={16} color="white" />
-          </View>
-        </Pressable>
+            <View className="flex-row items-center">
+              <Text className="text-white/90 text-sm mr-2">
+                Tap to start writing
+              </Text>
+              <Ionicons name="arrow-forward" size={16} color="white" />
+            </View>
+          </Pressable>
+        </View>
 
         {activeStories.length === 0 ? (
           <View className="items-center justify-center py-20">

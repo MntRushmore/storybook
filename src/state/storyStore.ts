@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Story, StoryEntry, UserProfile } from "../types/story";
 import { v4 as uuidv4 } from "uuid";
+import { useSharedSessionStore } from "./sharedSessionStore";
 
 interface StoryState {
   stories: Story[];
@@ -21,7 +22,7 @@ interface StoryState {
 
   // Session management
   generateSessionCode: () => string;
-  joinSession: (sessionCode: string, partnerId: string) => void;
+  joinSession: (sessionCode: string, partnerId: string, partnerName: string) => string | undefined;
 
   // Helpers
   getActiveStories: () => Story[];
@@ -93,6 +94,16 @@ export const useStoryStore = create<StoryState>()(
         set(state => ({
           stories: [newStory, ...state.stories],
         }));
+
+        // Register session globally so partners can find it
+        useSharedSessionStore.getState().addSession({
+          sessionCode,
+          storyId: newStory.id,
+          creatorId: userProfile.userId,
+          creatorName: userProfile.name,
+          title: storyTitle,
+          createdAt: Date.now(),
+        });
 
         return newStory.id;
       },
@@ -171,14 +182,35 @@ export const useStoryStore = create<StoryState>()(
         return code;
       },
 
-      joinSession: (sessionCode: string, partnerId: string) => {
+      joinSession: (sessionCode: string, partnerId: string, partnerName: string) => {
+        const userProfile = get().userProfile;
+        if (!userProfile) return;
+
+        // Get session info from shared store
+        const session = useSharedSessionStore.getState().getSessionByCode(sessionCode);
+        if (!session) return;
+
+        // Create a new story copy for this partner
+        const newStory: Story = {
+          id: uuidv4(),
+          title: session.title,
+          entries: [],
+          createdAt: session.createdAt,
+          updatedAt: Date.now(),
+          isFinished: false,
+          currentTurnUserId: session.creatorId,
+          maxWords: DEFAULT_MAX_WORDS,
+          sessionCode,
+          creatorId: session.creatorId,
+          partnerId: userProfile.userId,
+          isRevealed: false,
+        };
+
         set(state => ({
-          stories: state.stories.map(story =>
-            story.sessionCode === sessionCode
-              ? { ...story, partnerId }
-              : story
-          ),
+          stories: [newStory, ...state.stories],
         }));
+
+        return newStory.id;
       },
 
       getActiveStories: () => {

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
+import { useSharedSessionStore } from "../state/sharedSessionStore";
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
@@ -24,9 +25,9 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
   const [sessionCode, setSessionCode] = useState("");
   const [error, setError] = useState("");
 
-  const stories = useStoryStore(s => s.stories);
   const userProfile = useStoryStore(s => s.userProfile);
   const joinSession = useStoryStore(s => s.joinSession);
+  const getSessionByCode = useSharedSessionStore(s => s.getSessionByCode);
 
   const handleJoin = () => {
     setError("");
@@ -41,24 +42,24 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
       return;
     }
 
-    // Find story with this session code
-    const story = stories.find(s => s.sessionCode === sessionCode);
+    // Find session in shared store
+    const session = getSessionByCode(sessionCode);
 
-    if (!story) {
+    if (!session) {
       setError("Story not found. Check the code and try again.");
       return;
     }
 
-    if (story.partnerId) {
-      setError("This story already has a partner");
+    // Create local copy and join
+    const storyId = joinSession(sessionCode, userProfile.userId, userProfile.name);
+
+    if (!storyId) {
+      setError("Failed to join session. Please try again.");
       return;
     }
 
-    // Join the session
-    joinSession(sessionCode, userProfile.userId);
-
     // Navigate to the story
-    navigation.navigate("StoryDetail", { storyId: story.id });
+    navigation.navigate("StoryDetail", { storyId });
   };
 
   return (

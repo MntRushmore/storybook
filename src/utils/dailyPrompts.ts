@@ -38,3 +38,7 @@ export function getTodayPrompt(): string {
   );
   return dailyPrompts[dayOfYear % dailyPrompts.length];
 }
+
+export function getRandomPrompt(): string {
+  return dailyPrompts[Math.floor(Math.random() * dailyPrompts.length)];
+}

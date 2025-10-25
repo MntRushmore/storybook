@@ -12,6 +12,11 @@
     },
     "android": {
       "edgeToEdgeEnabled": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2cb879b5-28c9-490f-9de7-6e12a38e140d"
+      }
     }
   }
 }

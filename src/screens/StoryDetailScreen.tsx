@@ -227,58 +227,70 @@ export function StoryDetailScreen({
             {!showInput ? (
               <Pressable
                 onPress={() => setShowInput(true)}
-                className="bg-[#D4A5A5] rounded-2xl p-4 flex-row items-center justify-center shadow-sm mb-4"
+                className="bg-[#D4A5A5] rounded-2xl p-5 shadow-md mb-4"
+                style={{
+                  shadowColor: "#8B7355",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 5,
+                }}
               >
-                <Ionicons name="add-circle-outline" size={24} color="white" />
-                <Text className="text-white font-semibold text-base ml-2">
-                  Add Your Word
-                </Text>
+                <View className="flex-row items-center justify-center">
+                  <Ionicons name="create" size={24} color="white" />
+                  <Text className="text-white font-bold text-lg ml-3">
+                    Add Your Word
+                  </Text>
+                </View>
               </Pressable>
             ) : (
-              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View className="bg-white rounded-2xl p-4 shadow-sm border border-[#E8D5C4] mb-4">
-                  <Text className="text-[#8B7355] font-semibold mb-2">
-                    Add one word
-                  </Text>
-                  <TextInput
-                    value={newWord}
-                    onChangeText={setNewWord}
-                    placeholder="Type a word..."
-                    placeholderTextColor="#A0886C"
-                    autoFocus
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    className="bg-[#FFF8F0] text-[#5D4E37] rounded-xl px-4 py-3 text-lg mb-3 border border-[#E8D5C4]"
-                  />
-                  {newWord.trim().split(/\s+/).length > 1 && (
-                    <Text className="text-red-500 text-sm mb-2">
+              <View className="bg-white rounded-2xl p-5 shadow-md border-2 border-[#D4A5A5] mb-4">
+                <Text className="text-[#8B7355] font-bold text-base mb-3">
+                  {"What's your word?"}
+                </Text>
+                <TextInput
+                  value={newWord}
+                  onChangeText={setNewWord}
+                  placeholder="Type one word..."
+                  placeholderTextColor="#A0886C"
+                  autoFocus
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  onSubmitEditing={handleAddWord}
+                  className="bg-[#FFF8F0] text-[#5D4E37] rounded-xl px-4 py-4 text-2xl font-semibold mb-3 border-2 border-[#E8D5C4] text-center"
+                />
+                {newWord.trim().split(/\s+/).length > 1 && (
+                  <View className="bg-red-50 rounded-xl p-3 mb-3 flex-row items-center">
+                    <Ionicons name="warning" size={18} color="#DC2626" />
+                    <Text className="text-red-600 text-sm ml-2 flex-1">
                       Only one word at a time!
                     </Text>
-                  )}
-                  <View className="flex-row space-x-2">
-                    <Pressable
-                      onPress={() => {
-                        setNewWord("");
-                        setShowInput(false);
-                      }}
-                      className="flex-1 bg-[#E8D5C4] rounded-xl py-3 items-center"
-                    >
-                      <Text className="text-[#8B7355] font-semibold">Cancel</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={handleAddWord}
-                      disabled={!newWord.trim() || newWord.trim().split(/\s+/).length > 1}
-                      className={`flex-1 rounded-xl py-3 items-center ${
-                        newWord.trim() && newWord.trim().split(/\s+/).length === 1
-                          ? "bg-[#D4A5A5]"
-                          : "bg-[#E8D5C4]"
-                      }`}
-                    >
-                      <Text className="text-white font-semibold">Add</Text>
-                    </Pressable>
                   </View>
+                )}
+                <View className="flex-row space-x-3">
+                  <Pressable
+                    onPress={() => {
+                      setNewWord("");
+                      setShowInput(false);
+                    }}
+                    className="flex-1 bg-[#E8D5C4] rounded-xl py-4 items-center"
+                  >
+                    <Text className="text-[#8B7355] font-bold text-base">Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleAddWord}
+                    disabled={!newWord.trim() || newWord.trim().split(/\s+/).length > 1}
+                    className={`flex-1 rounded-xl py-4 items-center ${
+                      newWord.trim() && newWord.trim().split(/\s+/).length === 1
+                        ? "bg-[#D4A5A5]"
+                        : "bg-[#E8D5C4]"
+                    }`}
+                  >
+                    <Text className="text-white font-bold text-base">Add Word</Text>
+                  </Pressable>
                 </View>
-              </TouchableWithoutFeedback>
+              </View>
             )}
           </>
         )}
