@@ -4,7 +4,13 @@ A beautiful storytelling app where you can write stories with anyone, one word a
 
 ## 🎉 Latest Features!
 
-### 📲 Story Code Sharing (NEW!)
+### 🎓 Welcome Tutorial (NEW!)
+- **Interactive Onboarding**: Beautiful 5-step tutorial for new users
+- **App Overview**: Learn how to create, share, and join stories
+- **One-Time Display**: Shows automatically after signup
+- **Skip Option**: Jump straight to the app if you prefer
+
+### 📲 Story Code Sharing
 - **Share via Text/SMS**: Easily share story codes through any messaging app
 - **6-Digit Join Codes**: Simple codes to join any story
 - **One-Tap Sharing**: Share button built into story screen
@@ -197,6 +203,7 @@ To activate premium:
 - **StreakDisplay**: Daily streak visualization
 - **TemplateCard**: Theme-styled template display
 - **VoiceRecorder**: Audio recording interface
+- **WelcomeModal**: Interactive 5-step tutorial for new users
 
 ### Services
 - **revenueCat.ts**: Premium management (local storage)
@@ -255,6 +262,8 @@ All features implemented and ready for:
 **Added:**
 - ✅ Simple story code sharing
 - ✅ Share via SMS/text functionality
+- ✅ Interactive welcome tutorial
+- ✅ First-time user onboarding
 - ✅ Streak tracking system
 - ✅ Local premium mode
 - ✅ Simplified database migration

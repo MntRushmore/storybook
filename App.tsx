@@ -8,6 +8,8 @@ import { useAuthStore } from "./src/state/authStore";
 import { useStoryStore } from "./src/state/storyStore";
 import { LoginScreen } from "./src/screens/LoginScreen";
 import { SignUpScreen } from "./src/screens/SignUpScreen";
+import { WelcomeModal } from "./src/components/WelcomeModal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /*
 IMPORTANT NOTICE: DO NOT REMOVE
@@ -32,6 +34,7 @@ const openai_api_key = Constants.expoConfig.extra.apikey;
 
 export default function App() {
   const [authScreen, setAuthScreen] = useState<"login" | "signup">("login");
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const user = useAuthStore(s => s.user);
   const isInitialized = useAuthStore(s => s.isInitialized);
@@ -47,8 +50,30 @@ export default function App() {
     // Load stories from Supabase when user is authenticated
     if (user) {
       loadUserStories();
+      checkAndShowWelcome();
     }
-  }, [user, loadUserStories]);
+  }, [user]);
+
+  const checkAndShowWelcome = async () => {
+    try {
+      const hasSeenWelcome = await AsyncStorage.getItem("hasSeenWelcome");
+      if (!hasSeenWelcome) {
+        setShowWelcome(true);
+      }
+    } catch (error) {
+      console.error("Error checking welcome status:", error);
+    }
+  };
+
+  const handleWelcomeClose = async () => {
+    try {
+      await AsyncStorage.setItem("hasSeenWelcome", "true");
+      setShowWelcome(false);
+    } catch (error) {
+      console.error("Error saving welcome status:", error);
+      setShowWelcome(false);
+    }
+  };
 
   // Show loading while initializing
   if (!isInitialized) {
@@ -95,6 +120,12 @@ export default function App() {
           <RootNavigator />
           <StatusBar style="auto" />
         </NavigationContainer>
+
+        {/* Welcome Modal */}
+        <WelcomeModal
+          visible={showWelcome}
+          onClose={handleWelcomeClose}
+        />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
