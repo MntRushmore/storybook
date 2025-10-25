@@ -36,7 +36,13 @@ export default function App() {
 
   const user = useAuthStore(s => s.user);
   const isInitialized = useAuthStore(s => s.isInitialized);
+  const initialize = useAuthStore(s => s.initialize);
   const loadUserStories = useStoryStore(s => s.loadUserStories);
+
+  // Initialize auth on app start
+  useEffect(() => {
+    initialize();
+  }, []);
 
   useEffect(() => {
     // Register for push notifications when user is logged in
@@ -58,6 +64,17 @@ export default function App() {
       loadUserStories();
     }
   }, [user, loadUserStories]);
+
+  // Show loading while initializing
+  if (!isInitialized) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          {/* Simple loading state - you can customize this */}
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    );
+  }
 
   // Show auth screens if not logged in
   if (!user && isInitialized) {
