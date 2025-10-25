@@ -6,7 +6,6 @@ import { RootNavigator } from "./src/navigation/RootNavigator";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "./src/state/authStore";
 import { useStoryStore } from "./src/state/storyStore";
-import { registerForPushNotifications } from "./src/services/pushNotifications";
 import { LoginScreen } from "./src/screens/LoginScreen";
 import { SignUpScreen } from "./src/screens/SignUpScreen";
 
@@ -43,20 +42,6 @@ export default function App() {
   useEffect(() => {
     initialize();
   }, []);
-
-  useEffect(() => {
-    // Register for push notifications when user is logged in
-    if (user) {
-      registerForPushNotifications().then(token => {
-        if (token) {
-          console.log("Push notification token:", token);
-          // TODO: Save token to user profile in Supabase
-        }
-      }).catch(error => {
-        console.error("Error registering for push notifications:", error);
-      });
-    }
-  }, [user]);
 
   useEffect(() => {
     // Load stories from Supabase when user is authenticated
