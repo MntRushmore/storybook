@@ -4,11 +4,6 @@ import {
   Text,
   Pressable,
   ScrollView,
-  TextInput,
-  Modal,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,22 +20,13 @@ type SettingsScreenProps = {
 
 export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const insets = useSafeAreaInsets();
-  const [showPairModal, setShowPairModal] = useState(false);
-  const [pairCode, setPairCode] = useState("");
-  const [showCodeModal, setShowCodeModal] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState("");
   const [showPaywall, setShowPaywall] = useState(false);
 
   const user = useAuthStore(s => s.user);
   const stories = useStoryStore(s => s.stories);
-  const generatePairingCode = useStoryStore(s => s.generatePairingCode);
-  const joinWithCode = useStoryStore(s => s.joinWithCode);
   const signOut = useAuthStore(s => s.signOut);
 
   const isPremium = false; // TODO: Get from Supabase profile
-
-  // Check if user has any stories with a partner
-  const hasPartner = stories.some(story => story.partnerId && story.partnerId !== user?.id);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -57,29 +43,6 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
         },
       ]
     );
-  };
-
-  const handleGenerateCode = async () => {
-    try {
-      const code = await generatePairingCode();
-      setGeneratedCode(code);
-      setShowCodeModal(true);
-    } catch (error) {
-      Alert.alert("Error", "Failed to generate pairing code");
-    }
-  };
-
-  const handlePairWithCode = async () => {
-    if (pairCode.trim().length === 6) {
-      const result = await joinWithCode(pairCode.trim());
-      setPairCode("");
-      setShowPairModal(false);
-      if (result.success) {
-        Alert.alert("Success", "Successfully paired with your partner!");
-      } else {
-        Alert.alert("Error", result.error || "Failed to pair");
-      }
-    }
   };
 
   return (
@@ -120,11 +83,9 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
               <Text className="text-[#5D4E37] font-semibold text-lg">
                 {user?.user_metadata?.name || user?.email || "User"}
               </Text>
-              {hasPartner && (
-                <Text className="text-[#A0886C] text-sm mt-1">
-                  Paired with partner
-                </Text>
-              )}
+              <Text className="text-[#A0886C] text-sm mt-1">
+                {stories.length} {stories.length === 1 ? "story" : "stories"}
+              </Text>
             </View>
           </View>
         </View>
@@ -166,67 +127,6 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           )}
         </View>
 
-        {/* Couple Pairing Section */}
-        <View className="bg-white rounded-2xl p-5 shadow-sm border border-[#E8D5C4] mb-4">
-          <View className="flex-row items-center mb-3">
-            <Ionicons name="heart-circle" size={24} color="#D4A5A5" />
-            <Text className="text-[#8B7355] font-semibold text-base ml-2">
-              Partner Connection
-            </Text>
-          </View>
-
-          {hasPartner ? (
-            <View>
-              <View className="bg-[#D4A5A5]/10 rounded-xl p-4 mb-3 border border-[#D4A5A5]/30">
-                <View className="flex-row items-center mb-2">
-                  <Ionicons name="checkmark-circle" size={20} color="#D4A5A5" />
-                  <Text className="text-[#8B7355] font-semibold ml-2">
-                    Connected to Partner
-                  </Text>
-                </View>
-                <Text className="text-[#A0886C] text-sm mb-3">
-                  You can now create stories together! Choose to write with your partner or connect with someone new.
-                </Text>
-              </View>
-              <Text className="text-[#A0886C] text-sm mb-3">
-                Want to write with someone else?
-              </Text>
-              <Pressable
-                onPress={() => setShowPairModal(true)}
-                className="bg-[#E8D5C4] rounded-xl py-3 items-center"
-              >
-                <Text className="text-[#8B7355] font-semibold">
-                  Connect with New Person
-                </Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View>
-              <Text className="text-[#A0886C] text-sm mb-4">
-                Connect with your partner to write stories together in real-time
-              </Text>
-              <View className="space-y-2">
-                <Pressable
-                  onPress={handleGenerateCode}
-                  className="bg-[#D4A5A5] rounded-xl py-4 items-center mb-2"
-                >
-                  <Text className="text-white font-semibold">
-                    Generate Pairing Code
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setShowPairModal(true)}
-                  className="bg-[#E8D5C4] rounded-xl py-4 items-center"
-                >
-                  <Text className="text-[#8B7355] font-semibold">
-                    Enter Partner Code
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
-        </View>
-
         {/* Account Section */}
         <View className="bg-white rounded-2xl p-5 shadow-sm border border-[#E8D5C4] mb-4">
           <Text className="text-[#8B7355] font-semibold text-base mb-3">
@@ -252,109 +152,10 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
             About
           </Text>
           <Text className="text-[#A0886C] text-sm leading-6">
-            Our Story Book lets you and your partner create beautiful memories together. Write stories one word or sentence at a time, save your favorites, and revisit them anytime.
+            Our Story Book lets you create beautiful memories with anyone. Write stories one word or sentence at a time using story codes, save your favorites, and revisit them anytime.
           </Text>
         </View>
       </ScrollView>
-
-      {/* Pair Modal */}
-      <Modal
-        visible={showPairModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowPairModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowPairModal(false)}>
-          <View className="flex-1 bg-black/50 justify-center px-6">
-            <TouchableWithoutFeedback onPress={() => {}}>
-              <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-              >
-                <View className="bg-[#FFF8F0] rounded-3xl p-6 border-2 border-[#E8D5C4]">
-                  <View className="flex-row items-center justify-between mb-4">
-                    <Text className="text-[#5D4E37] text-xl font-bold">
-                      Enter Partner Code
-                    </Text>
-                    <Pressable
-                      onPress={() => setShowPairModal(false)}
-                      className="w-8 h-8 rounded-full bg-[#E8D5C4] items-center justify-center"
-                    >
-                      <Ionicons name="close" size={18} color="#8B7355" />
-                    </Pressable>
-                  </View>
-
-                  <Text className="text-[#8B7355] text-sm mb-3">
-                    Ask your partner to generate a code and enter it below
-                  </Text>
-                  <TextInput
-                    value={pairCode}
-                    onChangeText={setPairCode}
-                    placeholder="123456"
-                    placeholderTextColor="#A0886C"
-                    keyboardType="number-pad"
-                    maxLength={6}
-                    className="bg-white text-[#5D4E37] rounded-xl px-4 py-3 text-center text-2xl font-semibold mb-4 border border-[#E8D5C4]"
-                    autoFocus
-                  />
-
-                  <Pressable
-                    onPress={handlePairWithCode}
-                    disabled={pairCode.length !== 6}
-                    className={`rounded-xl py-4 items-center ${
-                      pairCode.length === 6 ? "bg-[#D4A5A5]" : "bg-[#E8D5C4]"
-                    }`}
-                  >
-                    <Text className="text-white font-semibold text-base">
-                      Pair
-                    </Text>
-                  </Pressable>
-                </View>
-              </KeyboardAvoidingView>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
-      {/* Code Display Modal */}
-      <Modal
-        visible={showCodeModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCodeModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowCodeModal(false)}>
-          <View className="flex-1 bg-black/50 justify-center px-6">
-            <TouchableWithoutFeedback onPress={() => {}}>
-              <View className="bg-[#FFF8F0] rounded-3xl p-6 border-2 border-[#E8D5C4] items-center">
-                <View className="w-16 h-16 rounded-full bg-[#D4A5A5] items-center justify-center mb-4">
-                  <Ionicons name="heart" size={32} color="white" />
-                </View>
-                <Text className="text-[#5D4E37] text-xl font-bold mb-2">
-                  Your Pairing Code
-                </Text>
-                <Text className="text-[#8B7355] text-sm text-center mb-6">
-                  Share this code with your partner
-                </Text>
-
-                <View className="bg-white rounded-2xl p-6 border-2 border-[#D4A5A5] mb-6">
-                  <Text className="text-[#5D4E37] text-5xl font-bold text-center tracking-wider">
-                    {generatedCode}
-                  </Text>
-                </View>
-
-                <Pressable
-                  onPress={() => setShowCodeModal(false)}
-                  className="bg-[#D4A5A5] rounded-xl py-4 px-8"
-                >
-                  <Text className="text-white font-semibold text-base">
-                    Close
-                  </Text>
-                </Pressable>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
 
       {/* Paywall Modal */}
       <PaywallModal

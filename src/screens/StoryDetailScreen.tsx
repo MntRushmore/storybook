@@ -10,6 +10,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Modal,
+  Share,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
@@ -35,6 +37,7 @@ export function StoryDetailScreen({
   const [showInput, setShowInput] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const hasNavigatedToReveal = useRef(false);
 
   const story = useStoryStore(s => s.getStoryById(storyId));
@@ -42,6 +45,7 @@ export function StoryDetailScreen({
   const addWord = useStoryStore(s => s.addWord);
   const finishStory = useStoryStore(s => s.finishStory);
   const deleteStory = useStoryStore(s => s.deleteStory);
+  const generateStoryCode = useStoryStore(s => s.generateStoryCode);
 
   useEffect(() => {
     if (!story) {
@@ -92,6 +96,19 @@ export function StoryDetailScreen({
     navigation.goBack();
   };
 
+  const handleShare = async () => {
+    const storyCode = generateStoryCode(storyId);
+    const message = `Join my story "${story.title}"! Use code ${storyCode} in Our Story Book app.`;
+
+    try {
+      await Share.share({
+        message,
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to share story code");
+    }
+  };
+
   const wordsRemaining = story.maxWords - story.entries.length;
   const progressPercent = (story.entries.length / story.maxWords) * 100;
 
@@ -120,12 +137,20 @@ export function StoryDetailScreen({
               {story.title}
             </Text>
           </View>
-          <Pressable
-            onPress={() => setShowDeleteModal(true)}
-            className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
-          >
-            <Ionicons name="trash-outline" size={20} color="#FFF8F0" />
-          </Pressable>
+          <View className="flex-row space-x-2">
+            <Pressable
+              onPress={handleShare}
+              className="w-10 h-10 rounded-full bg-white/20 items-center justify-center mr-2"
+            >
+              <Ionicons name="share-outline" size={20} color="#FFF8F0" />
+            </Pressable>
+            <Pressable
+              onPress={() => setShowDeleteModal(true)}
+              className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+            >
+              <Ionicons name="trash-outline" size={20} color="#FFF8F0" />
+            </Pressable>
+          </View>
         </View>
 
         {/* Progress Bar */}

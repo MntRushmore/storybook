@@ -6,7 +6,6 @@ import { supabase } from "../api/supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useStreakStore } from "./streakStore";
 import { useAuthStore } from "./authStore";
-import { generatePairingCode, joinWithPairingCode } from "../services/pairingService";
 
 interface StoryState {
   stories: Story[];
@@ -21,8 +20,8 @@ interface StoryState {
   deleteStory: (storyId: string) => Promise<void>;
   revealStory: (storyId: string) => void;
 
-  // Pairing
-  generatePairingCode: (storyId?: string) => Promise<string>;
+  // Story code functions
+  generateStoryCode: (storyId: string) => string;
   joinWithCode: (code: string) => Promise<{ success: boolean; storyId?: string; error?: string }>;
 
   // Sync functions
@@ -327,17 +326,22 @@ export const useStoryStore = create<StoryState>()(
           });
       },
 
-      generatePairingCode: async (storyId?: string) => {
-        const user = useAuthStore.getState().user;
-        if (!user) throw new Error("User not authenticated");
+      generateStoryCode: (storyId: string) => {
+        // Generate a simple 6-digit code from the story ID
+        // In production, you might want to store this in the database
+        const story = get().getStoryById(storyId);
+        if (!story) return "000000";
 
-        try {
-          const code = await generatePairingCode(user.id, storyId);
-          return code;
-        } catch (error) {
-          console.error("Error generating pairing code:", error);
-          throw error;
+        // Use session_code from database if available, otherwise generate from ID
+        if (story.sessionCode) return story.sessionCode;
+
+        // Create a numeric code from the story ID
+        let hash = 0;
+        for (let i = 0; i < storyId.length; i++) {
+          hash = ((hash << 5) - hash) + storyId.charCodeAt(i);
+          hash = hash & hash;
         }
+        return Math.abs(hash).toString().slice(0, 6).padStart(6, "0");
       },
 
       joinWithCode: async (code: string) => {
@@ -347,18 +351,35 @@ export const useStoryStore = create<StoryState>()(
         set({ isLoading: true, error: null });
 
         try {
-          const result = await joinWithPairingCode(code, user.id);
+          // Find story with matching session_code
+          const { data: stories, error: searchError } = await supabase
+            .from("stories")
+            .select("*")
+            .eq("session_code", code)
+            .limit(1);
 
-          if (!result) {
+          if (searchError || !stories || stories.length === 0) {
             set({ isLoading: false, error: "Invalid or expired code" });
             return { success: false, error: "Invalid or expired code" };
           }
 
-          // Reload stories to include newly paired stories
+          const story = stories[0];
+
+          // Add user as partner if not already
+          if (story.partner_id !== user.id) {
+            const { error: updateError } = await supabase
+              .from("stories")
+              .update({ partner_id: user.id })
+              .eq("id", story.id);
+
+            if (updateError) throw updateError;
+          }
+
+          // Reload stories to include newly joined story
           await get().loadUserStories();
 
           set({ isLoading: false });
-          return { success: true, storyId: result.storyId || undefined };
+          return { success: true, storyId: story.id };
         } catch (error) {
           console.error("Error joining with code:", error);
           set({ isLoading: false, error: (error as Error).message });

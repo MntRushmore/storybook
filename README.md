@@ -1,8 +1,14 @@
-# WordChain Premium - The Ultimate Couple's Storytelling App ✨
+# WordChain Premium - The Ultimate Storytelling App ✨
 
-A beautiful couple scrapbook app where partners write stories together, one word at a time - now with **premium features, themes, voice input, streaks, and more**!
+A beautiful storytelling app where you can write stories with anyone, one word at a time - now with **premium features, themes, voice input, streaks, and easy story sharing**!
 
 ## 🎉 Latest Features!
+
+### 📲 Story Code Sharing (NEW!)
+- **Share via Text/SMS**: Easily share story codes through any messaging app
+- **6-Digit Join Codes**: Simple codes to join any story
+- **One-Tap Sharing**: Share button built into story screen
+- **No Partner Setup Required**: Anyone with the code can join your story
 
 ### ✨ Premium Subscription (Local Mode)
 - **Easy Premium Toggle**: Enable premium directly in Settings
@@ -10,7 +16,7 @@ A beautiful couple scrapbook app where partners write stories together, one word
 - **Feature Gating**: Smart premium feature management
 - **Instant Activation**: Toggle premium on/off anytime
 
-### 🔥 Streak Tracking (NEW!)
+### 🔥 Streak Tracking
 - **Daily Writing Streaks**: Track consecutive days of writing
 - **Milestone Celebrations**: See your longest streak
 - **Activity Statistics**: Total stories and words written
@@ -50,6 +56,7 @@ A beautiful couple scrapbook app where partners write stories together, one word
 - 3 themes (Romance, Comedy, Slice-of-Life)
 - Quick & Standard modes
 - Basic templates
+- Story code sharing
 
 **Premium Unlocks:**
 - ✨ Unlimited active stories
@@ -110,6 +117,17 @@ To activate premium:
 3. Select a template or create custom prompt
 4. Start writing!
 
+### Share Your Story
+1. Open any story
+2. Tap the share button in the header
+3. Send the 6-digit code via text, SMS, or any messaging app
+4. Anyone with the code can join and write with you!
+
+### Join a Story
+1. Tap "Join" on home screen
+2. Enter the 6-digit story code
+3. Start writing together!
+
 ### Enable Premium
 - Tap "Go Premium" in Settings
 - Subscribe to unlock all features
@@ -136,7 +154,8 @@ To activate premium:
 **Core Features:**
 - Turn-based word writing
 - Real-time cloud sync (Supabase)
-- Partner connection via 6-digit codes
+- Story code sharing via SMS/text
+- Simple 6-digit join codes
 - Progress tracking
 - Story reveal animations
 
@@ -167,10 +186,10 @@ To activate premium:
 ### Screens
 - **HomeScreen**: Story list with streak display and daily prompt
 - **TemplateSelectionScreen**: Theme/mode picker with templates
-- **StoryDetailScreen**: Writing interface with voice input
+- **StoryDetailScreen**: Writing interface with voice input and share button
 - **StoryRevealScreen**: Animated story completion
 - **MemoriesScreen**: Finished stories with reactions
-- **JoinSessionScreen**: Partner connection
+- **JoinSessionScreen**: Simple story code entry
 - **SettingsScreen**: Profile and premium management
 
 ### New Components
@@ -231,16 +250,20 @@ All features implemented and ready for:
 - ❌ Photo upload/attachments
 - ❌ Story export (PDF/Image)
 - ❌ RevenueCat integration requirement
+- ❌ Complex partner pairing system
 
 **Added:**
+- ✅ Simple story code sharing
+- ✅ Share via SMS/text functionality
 - ✅ Streak tracking system
 - ✅ Local premium mode
 - ✅ Simplified database migration
 - ✅ Premium toggle in Settings
+- ✅ One-tap story code generation
 
 ---
 
-**Built with ❤️ • Cloud-synced! • Streak Tracking! • Beautiful Design!**
+**Built with ❤️ • Cloud-synced! • Streak Tracking! • Easy Sharing! • Beautiful Design!**
 
 WordChain - Create memories together, one word at a time ✨
 
