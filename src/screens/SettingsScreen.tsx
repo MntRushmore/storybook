@@ -31,16 +31,16 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const [generatedCode, setGeneratedCode] = useState("");
   const [showPaywall, setShowPaywall] = useState(false);
 
-  const userProfile = useStoryStore(s => s.userProfile);
+  const user = useAuthStore(s => s.user);
   const stories = useStoryStore(s => s.stories);
-  const generateSessionCode = useStoryStore(s => s.generateSessionCode);
-  const updateUserProfile = useStoryStore(s => s.updateUserProfile);
+  const generatePairingCode = useStoryStore(s => s.generatePairingCode);
+  const joinWithCode = useStoryStore(s => s.joinWithCode);
   const signOut = useAuthStore(s => s.signOut);
 
-  const isPremium = userProfile?.isPremium || false;
+  const isPremium = false; // TODO: Get from Supabase profile
 
   // Check if user has any stories with a partner
-  const hasPartner = stories.some(story => story.partnerId && story.partnerId !== userProfile?.userId);
+  const hasPartner = stories.some(story => story.partnerId && story.partnerId !== user?.id);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -59,20 +59,26 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
     );
   };
 
-  const handleGenerateCode = () => {
-    const code = generateSessionCode();
-    setGeneratedCode(code);
-    setShowCodeModal(true);
+  const handleGenerateCode = async () => {
+    try {
+      const code = await generatePairingCode();
+      setGeneratedCode(code);
+      setShowCodeModal(true);
+    } catch (error) {
+      Alert.alert("Error", "Failed to generate pairing code");
+    }
   };
 
-  const handlePairWithCode = () => {
+  const handlePairWithCode = async () => {
     if (pairCode.trim().length === 6) {
-      updateUserProfile({ coupleCode: pairCode.trim() });
+      const result = await joinWithCode(pairCode.trim());
       setPairCode("");
       setShowPairModal(false);
-      // Show success message in UI instead of Alert
-    } else {
-      // Show error message in UI instead of Alert
+      if (result.success) {
+        Alert.alert("Success", "Successfully paired with your partner!");
+      } else {
+        Alert.alert("Error", result.error || "Failed to pair");
+      }
     }
   };
 
@@ -104,19 +110,19 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           <View className="flex-row items-center">
             <View
               className="w-16 h-16 rounded-full items-center justify-center mr-4"
-              style={{ backgroundColor: userProfile?.color || "#D4A5A5" }}
+              style={{ backgroundColor: "#D4A5A5" }}
             >
               <Text className="text-white text-2xl font-bold">
-                {userProfile?.initials || "ME"}
+                {user?.user_metadata?.name?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) || "ME"}
               </Text>
             </View>
             <View>
               <Text className="text-[#5D4E37] font-semibold text-lg">
-                {userProfile?.name || "User"}
+                {user?.user_metadata?.name || user?.email || "User"}
               </Text>
-              {userProfile?.coupleCode && (
+              {hasPartner && (
                 <Text className="text-[#A0886C] text-sm mt-1">
-                  Paired • Code: {userProfile.coupleCode}
+                  Paired with partner
                 </Text>
               )}
             </View>

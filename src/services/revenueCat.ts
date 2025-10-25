@@ -10,7 +10,8 @@
  * For now, this uses a mock/local implementation until RevenueCat is configured
  */
 
-import { useStoryStore } from "../state/storyStore";
+import { useAuthStore } from "../state/authStore";
+import { updatePremiumStatus } from "./profileService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const PREMIUM_KEY = "@wordchain_premium_status";
@@ -51,8 +52,11 @@ export async function purchasePremium(): Promise<PurchaseResult> {
     // Mock implementation - simulates purchase
     await AsyncStorage.setItem(PREMIUM_KEY, "true");
 
-    // Update user profile in store
-    useStoryStore.getState().updateUserProfile({ isPremium: true });
+    // Update user profile in Supabase
+    const user = useAuthStore.getState().user;
+    if (user) {
+      await updatePremiumStatus(user.id, true);
+    }
 
     return {
       success: true,
@@ -80,7 +84,10 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     const isPremium = status === "true";
 
     if (isPremium) {
-      useStoryStore.getState().updateUserProfile({ isPremium: true });
+      const user = useAuthStore.getState().user;
+      if (user) {
+        await updatePremiumStatus(user.id, true);
+      }
     }
 
     return {

@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
+import { useAuthStore } from "../state/authStore";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -37,7 +38,7 @@ export function StoryDetailScreen({
   const hasNavigatedToReveal = useRef(false);
 
   const story = useStoryStore(s => s.getStoryById(storyId));
-  const userProfile = useStoryStore(s => s.userProfile);
+  const user = useAuthStore(s => s.user);
   const addWord = useStoryStore(s => s.addWord);
   const finishStory = useStoryStore(s => s.finishStory);
   const deleteStory = useStoryStore(s => s.deleteStory);
@@ -55,12 +56,12 @@ export function StoryDetailScreen({
     }
   }, [story?.isFinished, story?.isRevealed, navigation, storyId]);
 
-  if (!story || !userProfile) {
+  if (!story || !user) {
     return null;
   }
 
   // Compute these values from story directly (avoid Zustand selector functions)
-  const isMyTurn = story.currentTurnUserId === userProfile.userId;
+  const isMyTurn = story.currentTurnUserId === user.id;
   const lastThreeWords = story.entries.slice(-3).map(e => e.word);
 
   const handleAddWord = async () => {

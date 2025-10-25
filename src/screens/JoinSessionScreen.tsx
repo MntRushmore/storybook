@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
+import { useAuthStore } from "../state/authStore";
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
@@ -24,14 +25,14 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
   const [sessionCode, setSessionCode] = useState("");
   const [error, setError] = useState("");
 
-  const userProfile = useStoryStore(s => s.userProfile);
-  const joinSession = useStoryStore(s => s.joinSession);
+  const user = useAuthStore(s => s.user);
+  const joinWithCode = useStoryStore(s => s.joinWithCode);
 
   const handleJoin = async () => {
     setError("");
 
-    if (!userProfile) {
-      setError("Please set up your profile first");
+    if (!user) {
+      setError("Please sign in first");
       return;
     }
 
@@ -41,15 +42,19 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
     }
 
     // Try to join via Supabase
-    const storyId = await joinSession(sessionCode);
+    const result = await joinWithCode(sessionCode);
 
-    if (!storyId) {
-      setError("Story not found. Check the code and try again.");
+    if (!result.success) {
+      setError(result.error || "Failed to join. Check the code and try again.");
       return;
     }
 
-    // Navigate to the story
-    navigation.navigate("StoryDetail", { storyId });
+    // Navigate to the story if one exists, otherwise go home
+    if (result.storyId) {
+      navigation.navigate("StoryDetail", { storyId: result.storyId });
+    } else {
+      navigation.goBack();
+    }
   };
 
   return (

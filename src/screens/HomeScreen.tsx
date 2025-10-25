@@ -2,11 +2,11 @@ import React, { useState, useMemo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
+import { useAuthStore } from "../state/authStore";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
 import { CreateStoryModal } from "../components/CreateStoryModal";
-import { SetupProfileModal } from "../components/SetupProfileModal";
 import { StreakDisplay } from "../components/StreakDisplay";
 import { getTodayPrompt, getRandomPrompt } from "../utils/dailyPrompts";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -20,7 +20,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const insets = useSafeAreaInsets();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState(getTodayPrompt());
-  const userProfile = useStoryStore(s => s.userProfile);
+  const user = useAuthStore(s => s.user);
   const stories = useStoryStore(s => s.stories);
   const createStory = useStoryStore(s => s.createStory);
 
@@ -37,10 +37,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const handleNewStory = () => {
     navigation.navigate("TemplateSelection");
   };
-
-  if (!userProfile) {
-    return <SetupProfileModal />;
-  }
 
   return (
     <View className="flex-1 bg-[#FFF8F0]">
@@ -73,7 +69,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 <Ionicons name="person" size={14} color="white" />
               </View>
               <Text className="text-white/90 text-sm font-medium">
-                {userProfile.name}
+                {user?.user_metadata?.name || "User"}
               </Text>
             </View>
           </View>

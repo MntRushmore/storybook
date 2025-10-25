@@ -8,6 +8,7 @@ import { RootStackParamList } from "../navigation/types";
 import { STORY_TEMPLATES, THEMES, MODES } from "../constants/storyConstants";
 import { StoryTheme, StoryMode } from "../types/story";
 import { useStoryStore } from "../state/storyStore";
+import { useAuthStore } from "../state/authStore";
 import { PaywallModal } from "../components/PaywallModal";
 import { checkPremiumStatus } from "../services/revenueCat";
 
@@ -15,7 +16,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "TemplateSelection">;
 
 export function TemplateSelectionScreen({ navigation }: Props) {
   const createStory = useStoryStore(s => s.createStory);
-  const userProfile = useStoryStore(s => s.userProfile);
+  const user = useAuthStore(s => s.user);
 
   const [selectedTheme, setSelectedTheme] = useState<StoryTheme | "all">("all");
   const [selectedMode, setSelectedMode] = useState<StoryMode>("standard");

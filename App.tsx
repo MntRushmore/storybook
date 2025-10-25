@@ -38,7 +38,6 @@ export default function App() {
 
   const user = useAuthStore(s => s.user);
   const isInitialized = useAuthStore(s => s.isInitialized);
-  const userProfile = useStoryStore(s => s.userProfile);
   const loadUserStories = useStoryStore(s => s.loadUserStories);
 
   useEffect(() => {
@@ -57,10 +56,10 @@ export default function App() {
 
   useEffect(() => {
     // Load stories from Supabase when user is authenticated
-    if (user && userProfile) {
+    if (user) {
       loadUserStories();
     }
-  }, [user, userProfile, loadUserStories]);
+  }, [user, loadUserStories]);
 
   // Show splash screen while initializing
   if (showSplash) {
