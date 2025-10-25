@@ -30,10 +30,14 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const [showPaywall, setShowPaywall] = useState(false);
 
   const userProfile = useStoryStore(s => s.userProfile);
+  const stories = useStoryStore(s => s.stories);
   const generateSessionCode = useStoryStore(s => s.generateSessionCode);
   const updateUserProfile = useStoryStore(s => s.updateUserProfile);
 
   const isPremium = userProfile?.isPremium || false;
+
+  // Check if user has any stories with a partner
+  const hasPartner = stories.some(story => story.partnerId && story.partnerId !== userProfile?.userId);
 
   const handleGenerateCode = () => {
     const code = generateSessionCode();
@@ -145,7 +149,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
             </Text>
           </View>
 
-          {userProfile?.partnerId ? (
+          {hasPartner ? (
             <View>
               <View className="bg-[#D4A5A5]/10 rounded-xl p-4 mb-3 border border-[#D4A5A5]/30">
                 <View className="flex-row items-center mb-2">

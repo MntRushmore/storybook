@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
+import { LinearGradient } from "expo-linear-gradient";
 import { CreateStoryModal } from "../components/CreateStoryModal";
 import { SetupProfileModal } from "../components/SetupProfileModal";
 import { StreakDisplay } from "../components/StreakDisplay";
@@ -43,44 +44,75 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 
   return (
     <View className="flex-1 bg-[#FFF8F0]">
-      {/* Header */}
-      <View
-        style={{ paddingTop: insets.top }}
-        className="bg-[#8B7355] px-6 pb-4 shadow-sm"
+      {/* Enhanced Header with Gradient */}
+      <LinearGradient
+        colors={["#D4A5A5", "#C8A4A4", "#B89B9B"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          paddingTop: insets.top + 12,
+          paddingBottom: 20,
+          paddingHorizontal: 24,
+          shadowColor: "#8B7355",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
+          elevation: 4,
+        }}
       >
-        <View className="flex-row items-center justify-between mt-2">
-          <View>
-            <Text className="text-white text-2xl font-semibold">
-              Our Story Book
-            </Text>
-            <Text className="text-[#F5E6D3] text-sm mt-1">
-              {userProfile.name}
-            </Text>
+        <View className="flex-row items-center justify-between mb-3">
+          <View className="flex-1">
+            <View className="flex-row items-center mb-1">
+              <Ionicons name="book" size={28} color="white" />
+              <Text className="text-white text-2xl font-bold ml-2">
+                Our Story Book
+              </Text>
+            </View>
+            <View className="flex-row items-center mt-1">
+              <View className="w-6 h-6 rounded-full bg-white/30 items-center justify-center mr-2">
+                <Ionicons name="person" size={14} color="white" />
+              </View>
+              <Text className="text-white/90 text-sm font-medium">
+                {userProfile.name}
+              </Text>
+            </View>
           </View>
           <Pressable
             onPress={() => navigation.navigate("Settings")}
-            className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+            className="w-12 h-12 rounded-full bg-white/25 items-center justify-center"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+            }}
           >
-            <Ionicons name="settings-outline" size={20} color="#FFF8F0" />
+            <Ionicons name="settings-outline" size={24} color="white" />
           </Pressable>
         </View>
-      </View>
 
-      <ScrollView className="flex-1 pt-6">
-        {/* Streak Display */}
-        <StreakDisplay />
+        {/* Streak Display in Header */}
+        <View className="mt-2">
+          <StreakDisplay />
+        </View>
+      </LinearGradient>
 
+      <ScrollView className="flex-1 pt-6" showsVerticalScrollIndicator={false}>
         <View className="px-6">
-        {/* Daily Prompt Card */}
-        <View
-          className="bg-gradient-to-br from-[#D4A5A5] to-[#C98686] rounded-2xl p-5 mb-6 shadow-sm"
+        {/* Enhanced Daily Prompt Card */}
+        <LinearGradient
+          colors={["#E8B4B8", "#D4A5A5"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={{
-            backgroundColor: "#D4A5A5",
+            borderRadius: 20,
+            padding: 20,
+            marginBottom: 24,
             shadowColor: "#8B7355",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.15,
-            shadowRadius: 6,
-            elevation: 3,
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 4,
           }}
         >
           <View className="flex-row items-center justify-between mb-3">
@@ -110,7 +142,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
               <Ionicons name="arrow-forward" size={16} color="white" />
             </View>
           </Pressable>
-        </View>
+        </LinearGradient>
 
         {activeStories.length === 0 ? (
           <View className="items-center justify-center py-20">
@@ -139,54 +171,66 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                   onPress={() =>
                     navigation.navigate("StoryDetail", { storyId: story.id })
                   }
-                  className="bg-white rounded-2xl p-5 shadow-sm border border-[#E8D5C4]"
+                  className="bg-white rounded-2xl p-5 mb-4 border-2 border-[#E8D5C4]"
                   style={{
                     shadowColor: "#8B7355",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 2,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 6,
+                    elevation: 3,
                   }}
                 >
                   <View className="flex-row items-start justify-between mb-3">
                     <View className="flex-1">
-                      <Text className="text-[#5D4E37] text-lg font-semibold mb-1">
+                      <Text className="text-[#5D4E37] text-xl font-bold mb-1">
                         {story.title}
                       </Text>
-                      <Text className="text-[#A0886C] text-xs">
-                        {format(story.updatedAt, "MMM d, yyyy")}
-                      </Text>
+                      <View className="flex-row items-center">
+                        <Ionicons name="calendar-outline" size={12} color="#A0886C" />
+                        <Text className="text-[#A0886C] text-xs ml-1">
+                          {format(story.updatedAt, "MMM d, yyyy")}
+                        </Text>
+                      </View>
                     </View>
-                    <View className="w-10 h-10 rounded-full bg-[#F5E6D3] items-center justify-center">
-                      <Ionicons name="book" size={18} color="#8B7355" />
+                    <View className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4A5A5] to-[#E8B4B8] items-center justify-center"
+                      style={{ backgroundColor: "#D4A5A5" }}
+                    >
+                      <Ionicons name="book" size={22} color="white" />
                     </View>
                   </View>
 
                   {previewText ? (
-                    <Text
-                      className="text-[#6D5C47] text-sm leading-6 mb-3"
-                      numberOfLines={3}
-                    >
-                      {previewText}
-                      {story.entries.map(e => e.word).join(" ").length > 100 &&
-                        "..."}
-                    </Text>
+                    <View className="bg-[#FFF8F0] rounded-xl p-3 mb-3">
+                      <Text
+                        className="text-[#6D5C47] text-sm leading-6"
+                        numberOfLines={3}
+                      >
+                        {previewText}
+                        {story.entries.map(e => e.word).join(" ").length > 100 &&
+                          "..."}
+                      </Text>
+                    </View>
                   ) : (
-                    <Text className="text-[#A0886C] text-sm italic mb-3">
-                      Start writing...
-                    </Text>
+                    <View className="bg-[#FFF8F0] rounded-xl p-3 mb-3">
+                      <Text className="text-[#A0886C] text-sm italic">
+                        Start writing...
+                      </Text>
+                    </View>
                   )}
 
                   <View className="flex-row items-center justify-between pt-3 border-t border-[#E8D5C4]">
-                    <Text className="text-[#A0886C] text-xs">
-                      {story.entries.length}{" "}
-                      {story.entries.length === 1 ? "word" : "words"}
-                    </Text>
                     <View className="flex-row items-center">
-                      <Text className="text-[#D4A5A5] text-xs mr-1">
+                      <Ionicons name="pencil" size={14} color="#A0886C" />
+                      <Text className="text-[#A0886C] text-xs ml-1 font-medium">
+                        {story.entries.length}{" "}
+                        {story.entries.length === 1 ? "word" : "words"}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center bg-[#D4A5A5]/10 px-3 py-1.5 rounded-full">
+                      <Text className="text-[#D4A5A5] text-xs font-semibold mr-1">
                         Continue
                       </Text>
-                      <Ionicons name="arrow-forward" size={12} color="#D4A5A5" />
+                      <Ionicons name="arrow-forward" size={14} color="#D4A5A5" />
                     </View>
                   </View>
                 </Pressable>
@@ -197,7 +241,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         </View>
       </ScrollView>
 
-      {/* Floating Action Buttons */}
+      {/* Enhanced Floating Action Buttons */}
       <View
         style={{ paddingBottom: insets.bottom + 20 }}
         className="absolute bottom-0 left-0 right-0 items-center px-6"
@@ -205,36 +249,43 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         <View className="flex-row space-x-3 w-full justify-center">
           <Pressable
             onPress={() => navigation.navigate("JoinSession")}
-            className="bg-white rounded-full px-6 py-4 shadow-lg flex-row items-center border-2 border-[#D4A5A5]"
+            className="bg-white rounded-full px-7 py-4 shadow-lg flex-row items-center border-2 border-[#D4A5A5]"
             style={{
               shadowColor: "#8B7355",
-              shadowOffset: { width: 0, height: 4 },
+              shadowOffset: { width: 0, height: 6 },
               shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              shadowRadius: 10,
+              elevation: 10,
             }}
           >
-            <Ionicons name="enter" size={24} color="#D4A5A5" />
-            <Text className="text-[#D4A5A5] font-semibold text-base ml-2">
+            <Ionicons name="people" size={24} color="#D4A5A5" />
+            <Text className="text-[#D4A5A5] font-bold text-base ml-2">
               Join
             </Text>
           </Pressable>
-          <Pressable
-            onPress={handleNewStory}
-            className="bg-[#D4A5A5] rounded-full px-6 py-4 shadow-lg flex-row items-center"
+          <LinearGradient
+            colors={["#E8B4B8", "#D4A5A5"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{
+              borderRadius: 999,
               shadowColor: "#8B7355",
-              shadowOffset: { width: 0, height: 4 },
+              shadowOffset: { width: 0, height: 6 },
               shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              shadowRadius: 10,
+              elevation: 10,
             }}
           >
-            <Ionicons name="add" size={24} color="white" />
-            <Text className="text-white font-semibold text-base ml-2">
-              New Story
-            </Text>
-          </Pressable>
+            <Pressable
+              onPress={handleNewStory}
+              className="px-7 py-4 flex-row items-center"
+            >
+              <Ionicons name="add-circle" size={24} color="white" />
+              <Text className="text-white font-bold text-base ml-2">
+                New Story
+              </Text>
+            </Pressable>
+          </LinearGradient>
         </View>
       </View>
 

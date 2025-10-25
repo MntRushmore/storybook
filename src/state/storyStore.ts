@@ -209,18 +209,8 @@ export const useStoryStore = create<StoryState>()(
           console.error("Error updating story:", updateError);
         }
 
-        // Send notification to partner if it's now their turn and they're not the current user
-        if (story.partnerId && nextTurnUserId !== userProfile.userId && !shouldFinish) {
-          // Schedule local notification (for same device testing)
-          // In production, you'd send push notification to partner's device
-          try {
-            await scheduleYourTurnNotification(story.title);
-          } catch (error) {
-            console.error("Error sending notification:", error);
-          }
-        }
-
         // Local state will be updated by realtime subscription
+        // Notification will be sent to partner via their subscription listener
       },
 
       finishStory: async (storyId: string) => {
@@ -323,8 +313,28 @@ export const useStoryStore = create<StoryState>()(
               table: "stories",
               filter: `id=eq.${storyId}`,
             },
-            async () => {
+            async (payload) => {
+              const userProfile = get().userProfile;
+              const oldStory = get().getStoryById(storyId);
+
               await get().syncStoryFromDB(storyId);
+
+              const newStory = get().getStoryById(storyId);
+
+              // Check if it's now my turn and it wasn't before
+              if (userProfile && oldStory && newStory) {
+                const wasMyTurn = oldStory.currentTurnUserId === userProfile.userId;
+                const isNowMyTurn = newStory.currentTurnUserId === userProfile.userId;
+
+                // Notify only if it just became my turn and story isn't finished
+                if (!wasMyTurn && isNowMyTurn && !newStory.isFinished) {
+                  try {
+                    await scheduleYourTurnNotification(newStory.title);
+                  } catch (error) {
+                    console.error("Error sending notification:", error);
+                  }
+                }
+              }
             }
           )
           .on(
