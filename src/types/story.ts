@@ -7,7 +7,7 @@ export interface User {
 
 export interface StoryEntry {
   id: string;
-  text: string;
+  word: string; // Changed from text to word - one word at a time
   userId: string;
   timestamp: number;
 }
@@ -19,7 +19,12 @@ export interface Story {
   createdAt: number;
   updatedAt: number;
   isFinished: boolean;
-  coupleCode?: string;
+  currentTurnUserId: string; // Tracks whose turn it is
+  maxWords: number; // Story finishes when this many words reached
+  sessionCode?: string; // Code for partner to join
+  creatorId: string; // Who created the story
+  partnerId?: string; // Partner's user ID
+  isRevealed: boolean; // Has the story reveal animation been shown
 }
 
 export interface UserProfile {

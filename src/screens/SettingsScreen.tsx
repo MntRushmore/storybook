@@ -9,7 +9,6 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
@@ -29,23 +28,23 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const [generatedCode, setGeneratedCode] = useState("");
 
   const userProfile = useStoryStore(s => s.userProfile);
-  const generateCoupleCode = useStoryStore(s => s.generateCoupleCode);
-  const pairWithPartner = useStoryStore(s => s.pairWithPartner);
+  const generateSessionCode = useStoryStore(s => s.generateSessionCode);
+  const updateUserProfile = useStoryStore(s => s.updateUserProfile);
 
   const handleGenerateCode = () => {
-    const code = generateCoupleCode();
+    const code = generateSessionCode();
     setGeneratedCode(code);
     setShowCodeModal(true);
   };
 
   const handlePairWithCode = () => {
     if (pairCode.trim().length === 6) {
-      pairWithPartner(pairCode.trim());
+      updateUserProfile({ coupleCode: pairCode.trim() });
       setPairCode("");
       setShowPairModal(false);
-      Alert.alert("Success!", "You are now paired with your partner!");
+      // Show success message in UI instead of Alert
     } else {
-      Alert.alert("Invalid Code", "Please enter a 6-digit code");
+      // Show error message in UI instead of Alert
     }
   };
 

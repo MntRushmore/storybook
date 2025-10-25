@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
-  Keyboard,
 } from "react-native";
 import { useStoryStore } from "../state/storyStore";
 import { Ionicons } from "@expo/vector-icons";

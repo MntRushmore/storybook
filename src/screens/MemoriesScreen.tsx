@@ -53,7 +53,7 @@ export function MemoriesScreen({ navigation }: MemoriesScreenProps) {
           <View className="space-y-4 pb-6">
             {finishedStories.map((story) => {
               const previewText = story.entries
-                .map(e => e.text)
+                .map(e => e.word)
                 .join(" ")
                 .slice(0, 150);
 
@@ -80,7 +80,7 @@ export function MemoriesScreen({ navigation }: MemoriesScreenProps) {
                       <Text className="text-[#A0886C] text-xs">
                         {format(story.createdAt, "MMM d, yyyy")} •{" "}
                         {story.entries.length}{" "}
-                        {story.entries.length === 1 ? "entry" : "entries"}
+                        {story.entries.length === 1 ? "word" : "words"}
                       </Text>
                     </View>
                     <View className="w-10 h-10 rounded-full bg-[#F5E6D3] items-center justify-center">
@@ -93,7 +93,7 @@ export function MemoriesScreen({ navigation }: MemoriesScreenProps) {
                     numberOfLines={4}
                   >
                     {previewText}
-                    {story.entries.map(e => e.text).join(" ").length > 150 &&
+                    {story.entries.map(e => e.word).join(" ").length > 150 &&
                       "..."}
                   </Text>
 

@@ -5,6 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import type { RootStackParamList } from "./types";
 import { HomeScreen } from "../screens/HomeScreen";
 import { StoryDetailScreen } from "../screens/StoryDetailScreen";
+import { StoryRevealScreen } from "../screens/StoryRevealScreen";
+import { JoinSessionScreen } from "../screens/JoinSessionScreen";
 import { MemoriesScreen } from "../screens/MemoriesScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 
@@ -65,6 +67,15 @@ export function RootNavigator() {
     >
       <Stack.Screen name="Home" component={HomeTabs} />
       <Stack.Screen name="StoryDetail" component={StoryDetailScreen} />
+      <Stack.Screen
+        name="StoryReveal"
+        component={StoryRevealScreen}
+        options={{
+          presentation: "modal",
+          animation: "fade",
+        }}
+      />
+      <Stack.Screen name="JoinSession" component={JoinSessionScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );

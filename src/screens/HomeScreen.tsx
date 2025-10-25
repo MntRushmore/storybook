@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, ScrollView, Modal } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { CreateStoryModal } from "../components/CreateStoryModal";
 import { SetupProfileModal } from "../components/SetupProfileModal";
+import { getTodayPrompt } from "../utils/dailyPrompts";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -18,6 +19,14 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const userProfile = useStoryStore(s => s.userProfile);
   const activeStories = useStoryStore(s => s.getActiveStories());
+  const createStory = useStoryStore(s => s.createStory);
+
+  const todayPrompt = getTodayPrompt();
+
+  const handleUsePrompt = () => {
+    const storyId = createStory(todayPrompt);
+    navigation.navigate("StoryDetail", { storyId });
+  };
 
   if (!userProfile) {
     return <SetupProfileModal />;
@@ -49,6 +58,38 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       </View>
 
       <ScrollView className="flex-1 px-6 pt-6">
+        {/* Daily Prompt Card */}
+        <Pressable
+          onPress={handleUsePrompt}
+          className="bg-gradient-to-br from-[#D4A5A5] to-[#C98686] rounded-2xl p-5 mb-6 shadow-sm"
+          style={{
+            backgroundColor: "#D4A5A5",
+            shadowColor: "#8B7355",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 6,
+            elevation: 3,
+          }}
+        >
+          <View className="flex-row items-center mb-3">
+            <View className="bg-white/30 rounded-full p-2 mr-3">
+              <Ionicons name="bulb" size={20} color="white" />
+            </View>
+            <Text className="text-white font-semibold text-base">
+              {"Today's Prompt"}
+            </Text>
+          </View>
+          <Text className="text-white text-lg font-bold mb-2">
+            {todayPrompt}
+          </Text>
+          <View className="flex-row items-center">
+            <Text className="text-white/90 text-sm mr-2">
+              Tap to start writing
+            </Text>
+            <Ionicons name="arrow-forward" size={16} color="white" />
+          </View>
+        </Pressable>
+
         {activeStories.length === 0 ? (
           <View className="items-center justify-center py-20">
             <View className="mb-4">
@@ -65,9 +106,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         ) : (
           <View className="space-y-4 pb-6">
             {activeStories.map((story) => {
-              const lastEntry = story.entries[story.entries.length - 1];
               const previewText = story.entries
-                .map(e => e.text)
+                .map(e => e.word)
                 .join(" ")
                 .slice(0, 100);
 
@@ -106,7 +146,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                       numberOfLines={3}
                     >
                       {previewText}
-                      {story.entries.map(e => e.text).join(" ").length > 100 &&
+                      {story.entries.map(e => e.word).join(" ").length > 100 &&
                         "..."}
                     </Text>
                   ) : (
@@ -118,7 +158,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                   <View className="flex-row items-center justify-between pt-3 border-t border-[#E8D5C4]">
                     <Text className="text-[#A0886C] text-xs">
                       {story.entries.length}{" "}
-                      {story.entries.length === 1 ? "entry" : "entries"}
+                      {story.entries.length === 1 ? "word" : "words"}
                     </Text>
                     <View className="flex-row items-center">
                       <Text className="text-[#D4A5A5] text-xs mr-1">
@@ -134,27 +174,45 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         )}
       </ScrollView>
 
-      {/* Floating Create Button */}
+      {/* Floating Action Buttons */}
       <View
         style={{ paddingBottom: insets.bottom + 20 }}
-        className="absolute bottom-0 left-0 right-0 items-center"
+        className="absolute bottom-0 left-0 right-0 items-center px-6"
       >
-        <Pressable
-          onPress={() => setShowCreateModal(true)}
-          className="bg-[#D4A5A5] rounded-full px-8 py-4 shadow-lg flex-row items-center"
-          style={{
-            shadowColor: "#8B7355",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }}
-        >
-          <Ionicons name="add" size={24} color="white" />
-          <Text className="text-white font-semibold text-base ml-2">
-            New Story
-          </Text>
-        </Pressable>
+        <View className="flex-row space-x-3 w-full justify-center">
+          <Pressable
+            onPress={() => navigation.navigate("JoinSession")}
+            className="bg-white rounded-full px-6 py-4 shadow-lg flex-row items-center border-2 border-[#D4A5A5]"
+            style={{
+              shadowColor: "#8B7355",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
+          >
+            <Ionicons name="enter" size={24} color="#D4A5A5" />
+            <Text className="text-[#D4A5A5] font-semibold text-base ml-2">
+              Join
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setShowCreateModal(true)}
+            className="bg-[#D4A5A5] rounded-full px-6 py-4 shadow-lg flex-row items-center"
+            style={{
+              shadowColor: "#8B7355",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
+          >
+            <Ionicons name="add" size={24} color="white" />
+            <Text className="text-white font-semibold text-base ml-2">
+              New Story
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <CreateStoryModal
