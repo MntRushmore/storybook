@@ -108,19 +108,18 @@ CREATE TABLE IF NOT EXISTS stories (
   theme TEXT DEFAULT 'romance',
   mode TEXT DEFAULT 'standard',
   is_premium BOOLEAN DEFAULT FALSE,
-  session_code TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Remove tags and reactions columns if they exist
+-- Remove legacy columns if they exist
 ALTER TABLE stories DROP COLUMN IF EXISTS tags;
 ALTER TABLE stories DROP COLUMN IF EXISTS reactions;
+ALTER TABLE stories DROP COLUMN IF EXISTS session_code;
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_stories_creator ON stories(creator_id);
 CREATE INDEX IF NOT EXISTS idx_stories_partner ON stories(partner_id);
-CREATE INDEX IF NOT EXISTS idx_stories_session_code ON stories(session_code) WHERE session_code IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_stories_updated ON stories(updated_at DESC);
 
 -- Stories RLS
