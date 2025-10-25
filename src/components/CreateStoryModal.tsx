@@ -26,9 +26,9 @@ export function CreateStoryModal({
   const [title, setTitle] = useState("");
   const createStory = useStoryStore(s => s.createStory);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (title.trim()) {
-      const storyId = createStory(title.trim());
+      const storyId = await createStory(title.trim());
       setTitle("");
       onStoryCreated(storyId);
     }

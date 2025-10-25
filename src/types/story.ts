@@ -9,6 +9,7 @@ export interface StoryEntry {
   id: string;
   word: string; // Changed from text to word - one word at a time
   userId: string;
+  userName: string; // Store name for display
   timestamp: number;
 }
 

@@ -3,6 +3,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootNavigator } from "./src/navigation/RootNavigator";
+import { useEffect } from "react";
+import { useStoryStore } from "./src/state/storyStore";
 
 /*
 IMPORTANT NOTICE: DO NOT REMOVE
@@ -26,6 +28,16 @@ const openai_api_key = Constants.expoConfig.extra.apikey;
 */
 
 export default function App() {
+  const userProfile = useStoryStore(s => s.userProfile);
+  const loadUserStories = useStoryStore(s => s.loadUserStories);
+
+  useEffect(() => {
+    // Load stories from Supabase when app starts
+    if (userProfile) {
+      loadUserStories();
+    }
+  }, [userProfile, loadUserStories]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

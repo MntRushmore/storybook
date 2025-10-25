@@ -1,14 +1,31 @@
-# WordChain - Production-Ready! ✨
+# WordChain - Real-Time Cloud Sync! ☁️✨
 
-A beautiful couple scrapbook app where partners write stories together, one word at a time.
+A beautiful couple scrapbook app where partners write stories together, one word at a time - now with **Supabase real-time sync**!
 
-## 🎉 Latest Updates - All Fixed!
+## 🎉 Latest Updates - Cloud Database Added!
 
-### ✅ Partner Connection WORKING
-- **Shared Session Store**: Global registry for session codes
-- **Cross-Device Join**: Partners can now successfully join each other's stories
-- **Session Code Display**: Prominently shown in story detail screen
-- **Automatic Sync**: Both users see the same story after joining
+### ✅ Supabase Integration COMPLETE
+- **Real-Time Sync**: Stories sync instantly between partners
+- **Cloud Storage**: All stories saved in Supabase database
+- **No More Local-Only**: Stories persist across devices
+- **Auto-Reload**: Stories load automatically on app start
+- **Live Updates**: See partner's words appear in real-time
+
+### ✅ Setup Required (One Time Only)
+Before using the app, you need to set up the database tables:
+
+1. Go to your Supabase project: https://supabase.com/dashboard/project/qwafuwhkksaffmbzfqpq
+2. Click "SQL Editor" in the left sidebar
+3. Copy and paste the SQL from `supabase-migration.sql` (in project root)
+4. Click "Run" to create the tables
+
+That's it! The app will now sync stories between all devices.
+
+### ✅ Partner Connection NOW WORKS
+- **True Multi-Device**: Create story on one device, join on another
+- **Session Codes**: Share 6-digit code with your partner
+- **Real-Time Turns**: Both users see updates instantly
+- **Automatic Sync**: No manual refresh needed
 
 ### ✅ Shuffle Prompt Added
 - **Shuffle Button**: Tap the shuffle icon to get random prompts
@@ -53,7 +70,8 @@ A beautiful couple scrapbook app where partners write stories together, one word
 ## 🛠 Tech Stack
 
 - Expo SDK 53 + React Native 0.76.7
-- Zustand (2 stores: local + shared)
+- **Supabase** (PostgreSQL + Real-time subscriptions)
+- Zustand (local state only for user profile)
 - React Navigation
 - Nativewind + TailwindCSS
 - react-native-reanimated
@@ -61,9 +79,13 @@ A beautiful couple scrapbook app where partners write stories together, one word
 
 ## 📱 App Structure
 
-### Stores
-1. **storyStore**: User's stories and profile
-2. **sharedSessionStore**: Global session registry (enables partner discovery)
+### Database (Supabase)
+- **stories** table: Story metadata (title, session code, turn info)
+- **story_entries** table: Individual words with timestamps
+- Real-time subscriptions for instant sync
+
+### Local State (Zustand)
+- **storyStore**: Cached stories + user profile (syncs with Supabase)
 
 ### Screens
 - HomeScreen (with shuffleable prompt)
@@ -83,8 +105,8 @@ A beautiful couple scrapbook app where partners write stories together, one word
 
 ## Production Ready! 🚀
 
-All core features working, polished UI, and partner connection fixed. Ready for couples to create beautiful memories together!
+All core features working with **real-time cloud sync**! Partners can now truly write stories together across devices. Just run the SQL migration once and start creating memories!
 
 ---
 
-Built with ❤️ • **Join codes work!** • **Shuffle prompts!** • **Beautiful design!**
+Built with ❤️ • **Cloud-synced!** • **Real-time updates!** • **Beautiful design!**

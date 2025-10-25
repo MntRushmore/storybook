@@ -24,8 +24,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 
   const activeStories = useMemo(() => stories.filter(s => !s.isFinished), [stories]);
 
-  const handleUsePrompt = () => {
-    const storyId = createStory(currentPrompt);
+  const handleUsePrompt = async () => {
+    const storyId = await createStory(currentPrompt);
     navigation.navigate("StoryDetail", { storyId });
   };
 

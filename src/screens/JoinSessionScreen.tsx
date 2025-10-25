@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
-import { useSharedSessionStore } from "../state/sharedSessionStore";
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
@@ -27,9 +26,8 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
 
   const userProfile = useStoryStore(s => s.userProfile);
   const joinSession = useStoryStore(s => s.joinSession);
-  const getSessionByCode = useSharedSessionStore(s => s.getSessionByCode);
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     setError("");
 
     if (!userProfile) {
@@ -42,19 +40,11 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
       return;
     }
 
-    // Find session in shared store
-    const session = getSessionByCode(sessionCode);
-
-    if (!session) {
-      setError("Story not found. Check the code and try again.");
-      return;
-    }
-
-    // Create local copy and join
-    const storyId = joinSession(sessionCode, userProfile.userId, userProfile.name);
+    // Try to join via Supabase
+    const storyId = await joinSession(sessionCode);
 
     if (!storyId) {
-      setError("Failed to join session. Please try again.");
+      setError("Story not found. Check the code and try again.");
       return;
     }
 

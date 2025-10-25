@@ -3,26 +3,34 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Story, StoryEntry, UserProfile } from "../types/story";
 import { v4 as uuidv4 } from "uuid";
-import { useSharedSessionStore } from "./sharedSessionStore";
+import { supabase } from "../api/supabase";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 interface StoryState {
   stories: Story[];
   userProfile: UserProfile | null;
+  subscriptions: Map<string, RealtimeChannel>;
 
   // User actions
   createUserProfile: (name: string) => void;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
 
   // Story actions
-  createStory: (title?: string, prompt?: string) => string;
-  addWord: (storyId: string, word: string) => void;
-  finishStory: (storyId: string) => void;
-  deleteStory: (storyId: string) => void;
+  createStory: (title?: string, prompt?: string) => Promise<string>;
+  addWord: (storyId: string, word: string) => Promise<void>;
+  finishStory: (storyId: string) => Promise<void>;
+  deleteStory: (storyId: string) => Promise<void>;
   revealStory: (storyId: string) => void;
 
   // Session management
   generateSessionCode: () => string;
-  joinSession: (sessionCode: string, partnerId: string, partnerName: string) => string | undefined;
+  joinSession: (sessionCode: string) => Promise<string | undefined>;
+
+  // Sync functions
+  subscribeToStory: (storyId: string) => void;
+  unsubscribeFromStory: (storyId: string) => void;
+  syncStoryFromDB: (storyId: string) => Promise<void>;
+  loadUserStories: () => Promise<void>;
 
   // Helpers
   getActiveStories: () => Story[];
@@ -39,6 +47,7 @@ export const useStoryStore = create<StoryState>()(
     (set, get) => ({
       stories: [],
       userProfile: null,
+      subscriptions: new Map(),
 
       createUserProfile: (name: string) => {
         const colors = ["#E8B4B8", "#D4A5A5", "#C98686", "#B87E7E", "#A67C8C"];
@@ -70,15 +79,16 @@ export const useStoryStore = create<StoryState>()(
         }
       },
 
-      createStory: (title?: string, prompt?: string) => {
+      createStory: async (title?: string, prompt?: string) => {
         const userProfile = get().userProfile;
         if (!userProfile) throw new Error("User profile not found");
 
         const storyTitle = title || prompt || "Untitled Story";
         const sessionCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const storyId = uuidv4();
 
         const newStory: Story = {
-          id: uuidv4(),
+          id: storyId,
           title: storyTitle,
           entries: [],
           createdAt: Date.now(),
@@ -91,80 +101,118 @@ export const useStoryStore = create<StoryState>()(
           isRevealed: false,
         };
 
+        // Save to Supabase
+        const { error } = await supabase.from("stories").insert({
+          id: storyId,
+          title: storyTitle,
+          session_code: sessionCode,
+          creator_id: userProfile.userId,
+          creator_name: userProfile.name,
+          current_turn_user_id: userProfile.userId,
+          max_words: DEFAULT_MAX_WORDS,
+          is_finished: false,
+          is_revealed: false,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        });
+
+        if (error) {
+          console.error("Error creating story:", error);
+          throw error;
+        }
+
+        // Add to local state
         set(state => ({
           stories: [newStory, ...state.stories],
         }));
 
-        // Register session globally so partners can find it
-        useSharedSessionStore.getState().addSession({
-          sessionCode,
-          storyId: newStory.id,
-          creatorId: userProfile.userId,
-          creatorName: userProfile.name,
-          title: storyTitle,
-          createdAt: Date.now(),
-        });
+        // Subscribe to real-time updates
+        get().subscribeToStory(storyId);
 
-        return newStory.id;
+        return storyId;
       },
 
-      addWord: (storyId: string, word: string) => {
+      addWord: async (storyId: string, word: string) => {
         const userProfile = get().userProfile;
         if (!userProfile) return;
 
-        set(state => ({
-          stories: state.stories.map(story => {
-            if (story.id !== storyId) return story;
+        const story = get().getStoryById(storyId);
+        if (!story) return;
 
-            const newEntry: StoryEntry = {
-              id: uuidv4(),
-              word: word.trim(),
-              userId: userProfile.userId,
-              timestamp: Date.now(),
-            };
+        const entryId = uuidv4();
 
-            const newEntries = [...story.entries, newEntry];
+        // Save entry to Supabase
+        const { error: entryError } = await supabase.from("story_entries").insert({
+          id: entryId,
+          story_id: storyId,
+          word: word.trim(),
+          user_id: userProfile.userId,
+          user_name: userProfile.name,
+          timestamp: Date.now(),
+        });
 
-            // Determine next turn
-            let nextTurnUserId: string;
-            if (story.partnerId) {
-              // Alternate between creator and partner
-              nextTurnUserId = story.currentTurnUserId === story.creatorId
-                ? story.partnerId
-                : story.creatorId;
-            } else {
-              // Solo mode - always current user
-              nextTurnUserId = userProfile.userId;
-            }
+        if (entryError) {
+          console.error("Error adding word:", entryError);
+          return;
+        }
 
-            // Check if story should auto-finish
-            const shouldFinish = newEntries.length >= story.maxWords;
+        // Calculate next turn and finish status
+        const newEntryCount = story.entries.length + 1;
+        const shouldFinish = newEntryCount >= story.maxWords;
 
-            return {
-              ...story,
-              entries: newEntries,
-              updatedAt: Date.now(),
-              currentTurnUserId: nextTurnUserId,
-              isFinished: shouldFinish,
-            };
-          }),
-        }));
+        let nextTurnUserId: string;
+        if (story.partnerId) {
+          nextTurnUserId = story.currentTurnUserId === story.creatorId
+            ? story.partnerId
+            : story.creatorId;
+        } else {
+          nextTurnUserId = userProfile.userId;
+        }
+
+        // Update story metadata in Supabase
+        const { error: updateError } = await supabase
+          .from("stories")
+          .update({
+            current_turn_user_id: nextTurnUserId,
+            is_finished: shouldFinish,
+            updated_at: Date.now(),
+          })
+          .eq("id", storyId);
+
+        if (updateError) {
+          console.error("Error updating story:", updateError);
+        }
+
+        // Local state will be updated by realtime subscription
       },
 
-      finishStory: (storyId: string) => {
-        set(state => ({
-          stories: state.stories.map(story =>
-            story.id === storyId
-              ? { ...story, isFinished: true, updatedAt: Date.now() }
-              : story
-          ),
-        }));
+      finishStory: async (storyId: string) => {
+        const { error } = await supabase
+          .from("stories")
+          .update({
+            is_finished: true,
+            updated_at: Date.now(),
+          })
+          .eq("id", storyId);
+
+        if (error) {
+          console.error("Error finishing story:", error);
+        }
       },
 
-      deleteStory: (storyId: string) => {
+      deleteStory: async (storyId: string) => {
+        const { error } = await supabase.from("stories").delete().eq("id", storyId);
+
+        if (error) {
+          console.error("Error deleting story:", error);
+          return;
+        }
+
         set(state => ({
           stories: state.stories.filter(story => story.id !== storyId),
         }));
+
+        get().unsubscribeFromStory(storyId);
       },
 
       revealStory: (storyId: string) => {
@@ -182,35 +230,178 @@ export const useStoryStore = create<StoryState>()(
         return code;
       },
 
-      joinSession: (sessionCode: string, partnerId: string, partnerName: string) => {
+      joinSession: async (sessionCode: string) => {
         const userProfile = get().userProfile;
         if (!userProfile) return;
 
-        // Get session info from shared store
-        const session = useSharedSessionStore.getState().getSessionByCode(sessionCode);
-        if (!session) return;
+        // Find story by session code
+        const { data: storyData, error } = await supabase
+          .from("stories")
+          .select("*")
+          .eq("session_code", sessionCode)
+          .single();
 
-        // Create a new story copy for this partner
-        const newStory: Story = {
-          id: uuidv4(),
-          title: session.title,
-          entries: [],
-          createdAt: session.createdAt,
-          updatedAt: Date.now(),
-          isFinished: false,
-          currentTurnUserId: session.creatorId,
-          maxWords: DEFAULT_MAX_WORDS,
-          sessionCode,
-          creatorId: session.creatorId,
-          partnerId: userProfile.userId,
-          isRevealed: false,
+        if (error || !storyData) {
+          console.error("Story not found:", error);
+          return;
+        }
+
+        // Check if already joined
+        const existingStory = get().stories.find(s => s.sessionCode === sessionCode);
+        if (existingStory) {
+          return existingStory.id;
+        }
+
+        // Update story with partner info
+        const { error: updateError } = await supabase
+          .from("stories")
+          .update({
+            partner_id: userProfile.userId,
+            partner_name: userProfile.name,
+          })
+          .eq("id", storyData.id);
+
+        if (updateError) {
+          console.error("Error joining story:", updateError);
+        }
+
+        // Load the story and subscribe
+        await get().syncStoryFromDB(storyData.id);
+        get().subscribeToStory(storyData.id);
+
+        return storyData.id;
+      },
+
+      subscribeToStory: (storyId: string) => {
+        const existingSub = get().subscriptions.get(storyId);
+        if (existingSub) return; // Already subscribed
+
+        const channel = supabase
+          .channel(`story:${storyId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "stories",
+              filter: `id=eq.${storyId}`,
+            },
+            async () => {
+              await get().syncStoryFromDB(storyId);
+            }
+          )
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "story_entries",
+              filter: `story_id=eq.${storyId}`,
+            },
+            async () => {
+              await get().syncStoryFromDB(storyId);
+            }
+          )
+          .subscribe();
+
+        set(state => {
+          const newSubs = new Map(state.subscriptions);
+          newSubs.set(storyId, channel);
+          return { subscriptions: newSubs };
+        });
+      },
+
+      unsubscribeFromStory: (storyId: string) => {
+        const sub = get().subscriptions.get(storyId);
+        if (sub) {
+          supabase.removeChannel(sub);
+          set(state => {
+            const newSubs = new Map(state.subscriptions);
+            newSubs.delete(storyId);
+            return { subscriptions: newSubs };
+          });
+        }
+      },
+
+      syncStoryFromDB: async (storyId: string) => {
+        // Fetch story metadata
+        const { data: storyData, error: storyError } = await supabase
+          .from("stories")
+          .select("*")
+          .eq("id", storyId)
+          .single();
+
+        if (storyError || !storyData) {
+          console.error("Error fetching story:", storyError);
+          return;
+        }
+
+        // Fetch story entries
+        const { data: entriesData, error: entriesError } = await supabase
+          .from("story_entries")
+          .select("*")
+          .eq("story_id", storyId)
+          .order("timestamp", { ascending: true });
+
+        if (entriesError) {
+          console.error("Error fetching entries:", entriesError);
+          return;
+        }
+
+        // Convert to local format
+        const story: Story = {
+          id: storyData.id,
+          title: storyData.title,
+          entries: (entriesData || []).map(e => ({
+            id: e.id,
+            word: e.word,
+            userId: e.user_id,
+            userName: e.user_name,
+            timestamp: e.timestamp,
+          })),
+          createdAt: storyData.created_at,
+          updatedAt: storyData.updated_at,
+          isFinished: storyData.is_finished,
+          currentTurnUserId: storyData.current_turn_user_id,
+          maxWords: storyData.max_words,
+          sessionCode: storyData.session_code,
+          creatorId: storyData.creator_id,
+          partnerId: storyData.partner_id || undefined,
+          isRevealed: storyData.is_revealed,
         };
 
+        // Update local state
         set(state => ({
-          stories: [newStory, ...state.stories],
+          stories: [
+            story,
+            ...state.stories.filter(s => s.id !== storyId),
+          ],
         }));
+      },
 
-        return newStory.id;
+      loadUserStories: async () => {
+        const userProfile = get().userProfile;
+        if (!userProfile) return;
+
+        // Fetch stories where user is creator or partner
+        const { data: storiesData, error } = await supabase
+          .from("stories")
+          .select("*")
+          .or(`creator_id.eq.${userProfile.userId},partner_id.eq.${userProfile.userId}`)
+          .order("updated_at", { ascending: false });
+
+        if (error) {
+          console.error("Error loading stories:", error);
+          return;
+        }
+
+        if (!storiesData) return;
+
+        // Load each story with its entries
+        for (const storyData of storiesData) {
+          await get().syncStoryFromDB(storyData.id);
+          get().subscribeToStory(storyData.id);
+        }
       },
 
       getActiveStories: () => {
@@ -242,6 +433,10 @@ export const useStoryStore = create<StoryState>()(
     {
       name: "story-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        userProfile: state.userProfile,
+        // Don't persist stories - they'll be loaded from Supabase
+      }),
     }
   )
 );
