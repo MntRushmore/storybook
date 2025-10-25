@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { supabase } from "../api/supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useStreakStore } from "./streakStore";
+import { scheduleYourTurnNotification } from "../services/pushNotifications";
 
 interface StoryState {
   stories: Story[];
@@ -132,6 +133,22 @@ export const useStoryStore = create<StoryState>()(
           stories: [newStory, ...state.stories],
         }));
 
+        // If there's a prompt, add it as initial words
+        if (prompt && prompt.trim()) {
+          const words = prompt.trim().split(/\s+/).slice(0, 5); // Take first 5 words
+          for (const word of words) {
+            const entryId = uuidv4();
+            await supabase.from("story_entries").insert({
+              id: entryId,
+              story_id: storyId,
+              word: word,
+              user_id: userProfile.userId,
+              user_name: userProfile.name,
+              timestamp: Date.now(),
+            });
+          }
+        }
+
         // Subscribe to real-time updates
         get().subscribeToStory(storyId);
 
@@ -190,6 +207,17 @@ export const useStoryStore = create<StoryState>()(
 
         if (updateError) {
           console.error("Error updating story:", updateError);
+        }
+
+        // Send notification to partner if it's now their turn and they're not the current user
+        if (story.partnerId && nextTurnUserId !== userProfile.userId && !shouldFinish) {
+          // Schedule local notification (for same device testing)
+          // In production, you'd send push notification to partner's device
+          try {
+            await scheduleYourTurnNotification(story.title);
+          } catch (error) {
+            console.error("Error sending notification:", error);
+          }
         }
 
         // Local state will be updated by realtime subscription

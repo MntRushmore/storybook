@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { useEffect } from "react";
 import { useStoryStore } from "./src/state/storyStore";
+import { registerForPushNotifications } from "./src/services/pushNotifications";
 
 /*
 IMPORTANT NOTICE: DO NOT REMOVE
@@ -30,6 +31,18 @@ const openai_api_key = Constants.expoConfig.extra.apikey;
 export default function App() {
   const userProfile = useStoryStore(s => s.userProfile);
   const loadUserStories = useStoryStore(s => s.loadUserStories);
+
+  useEffect(() => {
+    // Register for push notifications on app start
+    registerForPushNotifications().then(token => {
+      if (token) {
+        console.log("Push notification token:", token);
+        // You could save this token to the user profile or send to backend
+      }
+    }).catch(error => {
+      console.error("Error registering for push notifications:", error);
+    });
+  }, []);
 
   useEffect(() => {
     // Load stories from Supabase when app starts

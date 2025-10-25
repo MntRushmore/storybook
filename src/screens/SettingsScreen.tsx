@@ -141,31 +141,60 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           <View className="flex-row items-center mb-3">
             <Ionicons name="heart-circle" size={24} color="#D4A5A5" />
             <Text className="text-[#8B7355] font-semibold text-base ml-2">
-              Couple Connection
+              Partner Connection
             </Text>
           </View>
-          <Text className="text-[#A0886C] text-sm mb-4">
-            Link your phones with a 6-digit code to write stories together in real-time
-          </Text>
 
-          <View className="space-y-2">
-            <Pressable
-              onPress={handleGenerateCode}
-              className="bg-[#D4A5A5] rounded-xl py-4 items-center mb-2"
-            >
-              <Text className="text-white font-semibold">
-                Generate Pairing Code
+          {userProfile?.partnerId ? (
+            <View>
+              <View className="bg-[#D4A5A5]/10 rounded-xl p-4 mb-3 border border-[#D4A5A5]/30">
+                <View className="flex-row items-center mb-2">
+                  <Ionicons name="checkmark-circle" size={20} color="#D4A5A5" />
+                  <Text className="text-[#8B7355] font-semibold ml-2">
+                    Connected to Partner
+                  </Text>
+                </View>
+                <Text className="text-[#A0886C] text-sm mb-3">
+                  You can now create stories together! Choose to write with your partner or connect with someone new.
+                </Text>
+              </View>
+              <Text className="text-[#A0886C] text-sm mb-3">
+                Want to write with someone else?
               </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setShowPairModal(true)}
-              className="bg-[#E8D5C4] rounded-xl py-4 items-center"
-            >
-              <Text className="text-[#8B7355] font-semibold">
-                Enter Partner Code
+              <Pressable
+                onPress={() => setShowPairModal(true)}
+                className="bg-[#E8D5C4] rounded-xl py-3 items-center"
+              >
+                <Text className="text-[#8B7355] font-semibold">
+                  Connect with New Person
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View>
+              <Text className="text-[#A0886C] text-sm mb-4">
+                Connect with your partner to write stories together in real-time
               </Text>
-            </Pressable>
-          </View>
+              <View className="space-y-2">
+                <Pressable
+                  onPress={handleGenerateCode}
+                  className="bg-[#D4A5A5] rounded-xl py-4 items-center mb-2"
+                >
+                  <Text className="text-white font-semibold">
+                    Generate Pairing Code
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setShowPairModal(true)}
+                  className="bg-[#E8D5C4] rounded-xl py-4 items-center"
+                >
+                  <Text className="text-[#8B7355] font-semibold">
+                    Enter Partner Code
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* About Section */}

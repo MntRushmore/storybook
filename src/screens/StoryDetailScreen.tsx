@@ -297,8 +297,8 @@ export function StoryDetailScreen({
           </>
         )}
 
-        {/* Session Code Display */}
-        {story.sessionCode && !story.partnerId && (
+        {/* Session Code Display - Only show if not finished and no partner */}
+        {story.sessionCode && !story.partnerId && !story.isFinished && (
           <View className="bg-[#F5E6D3] rounded-2xl p-4 mb-4 border border-[#E8D5C4]">
             <View className="flex-row items-center mb-2">
               <Ionicons name="share-social" size={20} color="#8B7355" />
