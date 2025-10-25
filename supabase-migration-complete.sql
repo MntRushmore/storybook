@@ -4,10 +4,18 @@
 -- Run this in Supabase SQL Editor
 -- This creates a complete auth-integrated schema with proper RLS
 
+-- Drop existing tables in correct order (respect foreign keys)
+DROP TABLE IF EXISTS story_entries CASCADE;
+DROP TABLE IF EXISTS stories CASCADE;
+DROP TABLE IF EXISTS user_stats CASCADE;
+DROP TABLE IF EXISTS pairing_codes CASCADE;
+DROP TABLE IF EXISTS pairs CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+
 -- ==========================================
 -- 1. PROFILES TABLE (links to auth.users)
 -- ==========================================
-CREATE TABLE IF NOT EXISTS profiles (
+CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   initials TEXT NOT NULL,
@@ -21,22 +29,19 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- Profiles RLS
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view all profiles" ON profiles;
 CREATE POLICY "Users can view all profiles" ON profiles
   FOR SELECT USING (true);
 
-DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile" ON profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 
-DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
 -- ==========================================
 -- 2. PAIRS TABLE (partner connections)
 -- ==========================================
-CREATE TABLE IF NOT EXISTS pairs (
+CREATE TABLE pairs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_a UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   user_b UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -46,27 +51,24 @@ CREATE TABLE IF NOT EXISTS pairs (
 );
 
 -- Create index for reverse lookup
-CREATE INDEX IF NOT EXISTS idx_pairs_user_b ON pairs(user_b);
+CREATE INDEX idx_pairs_user_b ON pairs(user_b);
 
 -- Pairs RLS
 ALTER TABLE pairs ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view their pairs" ON pairs;
 CREATE POLICY "Users can view their pairs" ON pairs
   FOR SELECT USING (auth.uid() = user_a OR auth.uid() = user_b);
 
-DROP POLICY IF EXISTS "Users can create pairs" ON pairs;
 CREATE POLICY "Users can create pairs" ON pairs
   FOR INSERT WITH CHECK (auth.uid() = user_a OR auth.uid() = user_b);
 
-DROP POLICY IF EXISTS "Users can delete their pairs" ON pairs;
 CREATE POLICY "Users can delete their pairs" ON pairs
   FOR DELETE USING (auth.uid() = user_a OR auth.uid() = user_b);
 
 -- ==========================================
 -- 3. PAIRING CODES TABLE (session codes)
 -- ==========================================
-CREATE TABLE IF NOT EXISTS pairing_codes (
+CREATE TABLE pairing_codes (
   code TEXT PRIMARY KEY,
   creator_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   story_id UUID,
@@ -76,27 +78,24 @@ CREATE TABLE IF NOT EXISTS pairing_codes (
 );
 
 -- Auto-cleanup expired codes
-CREATE INDEX IF NOT EXISTS idx_pairing_codes_expires ON pairing_codes(expires_at) WHERE NOT is_used;
+CREATE INDEX idx_pairing_codes_expires ON pairing_codes(expires_at) WHERE NOT is_used;
 
 -- Pairing codes RLS
 ALTER TABLE pairing_codes ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Anyone can view valid codes" ON pairing_codes;
 CREATE POLICY "Anyone can view valid codes" ON pairing_codes
   FOR SELECT USING (NOT is_used AND expires_at > NOW());
 
-DROP POLICY IF EXISTS "Users can create codes" ON pairing_codes;
 CREATE POLICY "Users can create codes" ON pairing_codes
   FOR INSERT WITH CHECK (auth.uid() = creator_id);
 
-DROP POLICY IF EXISTS "Users can update own codes" ON pairing_codes;
 CREATE POLICY "Users can update own codes" ON pairing_codes
   FOR UPDATE USING (auth.uid() = creator_id);
 
 -- ==========================================
 -- 4. STORIES TABLE
 -- ==========================================
-CREATE TABLE IF NOT EXISTS stories (
+CREATE TABLE stories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   creator_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -112,45 +111,36 @@ CREATE TABLE IF NOT EXISTS stories (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Remove legacy columns if they exist
-ALTER TABLE stories DROP COLUMN IF EXISTS tags;
-ALTER TABLE stories DROP COLUMN IF EXISTS reactions;
-ALTER TABLE stories DROP COLUMN IF EXISTS session_code;
-
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_stories_creator ON stories(creator_id);
-CREATE INDEX IF NOT EXISTS idx_stories_partner ON stories(partner_id);
-CREATE INDEX IF NOT EXISTS idx_stories_updated ON stories(updated_at DESC);
+CREATE INDEX idx_stories_creator ON stories(creator_id);
+CREATE INDEX idx_stories_partner ON stories(partner_id);
+CREATE INDEX idx_stories_updated ON stories(updated_at DESC);
 
 -- Stories RLS
 ALTER TABLE stories ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view their stories" ON stories;
 CREATE POLICY "Users can view their stories" ON stories
   FOR SELECT USING (
     auth.uid() = creator_id OR
     auth.uid() = partner_id
   );
 
-DROP POLICY IF EXISTS "Users can create stories" ON stories;
 CREATE POLICY "Users can create stories" ON stories
   FOR INSERT WITH CHECK (auth.uid() = creator_id);
 
-DROP POLICY IF EXISTS "Users can update their stories" ON stories;
 CREATE POLICY "Users can update their stories" ON stories
   FOR UPDATE USING (
     auth.uid() = creator_id OR
     auth.uid() = partner_id
   );
 
-DROP POLICY IF EXISTS "Users can delete own stories" ON stories;
 CREATE POLICY "Users can delete own stories" ON stories
   FOR DELETE USING (auth.uid() = creator_id);
 
 -- ==========================================
 -- 5. STORY ENTRIES TABLE (turns/words)
 -- ==========================================
-CREATE TABLE IF NOT EXISTS story_entries (
+CREATE TABLE story_entries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   story_id UUID NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -162,13 +152,12 @@ CREATE TABLE IF NOT EXISTS story_entries (
 );
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_entries_story ON story_entries(story_id, timestamp);
-CREATE INDEX IF NOT EXISTS idx_entries_user ON story_entries(user_id);
+CREATE INDEX idx_entries_story ON story_entries(story_id, timestamp);
+CREATE INDEX idx_entries_user ON story_entries(user_id);
 
 -- Story entries RLS
 ALTER TABLE story_entries ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view entries for their stories" ON story_entries;
 CREATE POLICY "Users can view entries for their stories" ON story_entries
   FOR SELECT USING (
     EXISTS (
@@ -178,7 +167,6 @@ CREATE POLICY "Users can view entries for their stories" ON story_entries
     )
   );
 
-DROP POLICY IF EXISTS "Users can insert entries for their turn" ON story_entries;
 CREATE POLICY "Users can insert entries for their turn" ON story_entries
   FOR INSERT WITH CHECK (
     auth.uid() = user_id AND
@@ -193,7 +181,7 @@ CREATE POLICY "Users can insert entries for their turn" ON story_entries
 -- ==========================================
 -- 6. USER STATS TABLE (streak tracking)
 -- ==========================================
-CREATE TABLE IF NOT EXISTS user_stats (
+CREATE TABLE user_stats (
   user_id UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
   current_streak INTEGER DEFAULT 0,
   longest_streak INTEGER DEFAULT 0,
@@ -207,11 +195,9 @@ CREATE TABLE IF NOT EXISTS user_stats (
 -- User stats RLS
 ALTER TABLE user_stats ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view all stats" ON user_stats;
 CREATE POLICY "Users can view all stats" ON user_stats
   FOR SELECT USING (true);
 
-DROP POLICY IF EXISTS "Users can manage own stats" ON user_stats;
 CREATE POLICY "Users can manage own stats" ON user_stats
   FOR ALL USING (auth.uid() = user_id);
 
@@ -268,17 +254,14 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers for updated_at
-DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_stories_updated_at ON stories;
 CREATE TRIGGER update_stories_updated_at
   BEFORE UPDATE ON stories
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_user_stats_updated_at ON user_stats;
 CREATE TRIGGER update_user_stats_updated_at
   BEFORE UPDATE ON user_stats
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
