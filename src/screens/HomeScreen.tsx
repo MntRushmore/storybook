@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
@@ -18,10 +18,11 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const insets = useSafeAreaInsets();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const userProfile = useStoryStore(s => s.userProfile);
-  const activeStories = useStoryStore(s => s.getActiveStories());
+  const stories = useStoryStore(s => s.stories);
   const createStory = useStoryStore(s => s.createStory);
 
-  const todayPrompt = getTodayPrompt();
+  const todayPrompt = useMemo(() => getTodayPrompt(), []);
+  const activeStories = useMemo(() => stories.filter(s => !s.isFinished), [stories]);
 
   const handleUsePrompt = () => {
     const storyId = createStory(todayPrompt);

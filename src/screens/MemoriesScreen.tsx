@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
@@ -13,7 +13,8 @@ type MemoriesScreenProps = {
 
 export function MemoriesScreen({ navigation }: MemoriesScreenProps) {
   const insets = useSafeAreaInsets();
-  const finishedStories = useStoryStore(s => s.getFinishedStories());
+  const stories = useStoryStore(s => s.stories);
+  const finishedStories = useMemo(() => stories.filter(s => s.isFinished), [stories]);
 
   return (
     <View className="flex-1 bg-[#FFF8F0]">

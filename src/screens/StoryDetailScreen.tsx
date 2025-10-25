@@ -40,8 +40,6 @@ export function StoryDetailScreen({
   const addWord = useStoryStore(s => s.addWord);
   const finishStory = useStoryStore(s => s.finishStory);
   const deleteStory = useStoryStore(s => s.deleteStory);
-  const isMyTurn = useStoryStore(s => s.isMyTurn(storyId));
-  const lastThreeWords = useStoryStore(s => s.getLastThreeWords(storyId));
 
   useEffect(() => {
     if (!story) {
@@ -58,6 +56,10 @@ export function StoryDetailScreen({
   if (!story || !userProfile) {
     return null;
   }
+
+  // Compute these values from story directly (avoid Zustand selector functions)
+  const isMyTurn = story.currentTurnUserId === userProfile.userId;
+  const lastThreeWords = story.entries.slice(-3).map(e => e.word);
 
   const handleAddWord = () => {
     const trimmedWord = newWord.trim();
