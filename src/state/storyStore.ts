@@ -99,6 +99,11 @@ export const useStoryStore = create<StoryState>()(
           sessionCode,
           creatorId: userProfile.userId,
           isRevealed: false,
+          theme: 'romance',
+          mode: 'standard',
+          tags: [],
+          reactions: {},
+          isPremium: false,
         };
 
         // Save to Supabase
@@ -358,6 +363,8 @@ export const useStoryStore = create<StoryState>()(
             userId: e.user_id,
             userName: e.user_name,
             timestamp: e.timestamp,
+            audioUrl: e.audio_url,
+            photoUrl: e.photo_url,
           })),
           createdAt: storyData.created_at,
           updatedAt: storyData.updated_at,
@@ -368,6 +375,12 @@ export const useStoryStore = create<StoryState>()(
           creatorId: storyData.creator_id,
           partnerId: storyData.partner_id || undefined,
           isRevealed: storyData.is_revealed,
+          theme: storyData.theme || 'romance',
+          mode: storyData.mode || 'standard',
+          tags: storyData.tags || [],
+          coverPhotoUrl: storyData.cover_photo_url,
+          reactions: storyData.reactions || {},
+          isPremium: storyData.is_premium || false,
         };
 
         // Update local state

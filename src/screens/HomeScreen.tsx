@@ -25,12 +25,15 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const activeStories = useMemo(() => stories.filter(s => !s.isFinished), [stories]);
 
   const handleUsePrompt = async () => {
-    const storyId = await createStory(currentPrompt);
-    navigation.navigate("StoryDetail", { storyId });
+    navigation.navigate("TemplateSelection");
   };
 
   const handleShufflePrompt = () => {
     setCurrentPrompt(getRandomPrompt());
+  };
+
+  const handleNewStory = () => {
+    navigation.navigate("TemplateSelection");
   };
 
   if (!userProfile) {
@@ -211,7 +214,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => setShowCreateModal(true)}
+            onPress={handleNewStory}
             className="bg-[#D4A5A5] rounded-full px-6 py-4 shadow-lg flex-row items-center"
             style={{
               shadowColor: "#8B7355",

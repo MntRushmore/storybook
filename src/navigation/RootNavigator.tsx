@@ -9,6 +9,7 @@ import { StoryRevealScreen } from "../screens/StoryRevealScreen";
 import { JoinSessionScreen } from "../screens/JoinSessionScreen";
 import { MemoriesScreen } from "../screens/MemoriesScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
+import { TemplateSelectionScreen } from "../screens/TemplateSelectionScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
@@ -66,6 +67,7 @@ export function RootNavigator() {
       }}
     >
       <Stack.Screen name="Home" component={HomeTabs} />
+      <Stack.Screen name="TemplateSelection" component={TemplateSelectionScreen} />
       <Stack.Screen name="StoryDetail" component={StoryDetailScreen} />
       <Stack.Screen
         name="StoryReveal"

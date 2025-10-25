@@ -5,4 +5,5 @@ export type RootStackParamList = {
   JoinSession: undefined;
   Memories: undefined;
   Settings: undefined;
+  TemplateSelection: undefined;
 };

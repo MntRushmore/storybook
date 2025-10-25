@@ -1,112 +1,230 @@
-# WordChain - Real-Time Cloud Sync! ☁️✨
+# WordChain Premium - The Ultimate Couple's Storytelling App ✨
 
-A beautiful couple scrapbook app where partners write stories together, one word at a time - now with **Supabase real-time sync**!
+A beautiful couple scrapbook app where partners write stories together, one word at a time - now with **premium features, themes, voice input, photos, and more**!
 
-## 🎉 Latest Updates - Cloud Database Added!
+## 🎉 Latest Premium Features Added!
 
-### ✅ Supabase Integration COMPLETE
-- **Real-Time Sync**: Stories sync instantly between partners
-- **Cloud Storage**: All stories saved in Supabase database
-- **No More Local-Only**: Stories persist across devices
-- **Auto-Reload**: Stories load automatically on app start
-- **Live Updates**: See partner's words appear in real-time
+### ✨ NEW - Premium Subscription with RevenueCat
+- **Paywall System**: Beautiful paywall modal with pricing tiers
+- **Monthly & Yearly Plans**: Flexible subscription options
+- **Feature Gating**: Smart premium feature management
+- **Restore Purchases**: Easy purchase restoration
 
-### ✅ Setup Required (One Time Only)
-Before using the app, you need to set up the database tables:
+### 🎨 NEW - Story Themes & Templates
+- **8 Unique Themes**: Romance, Adventure, Comedy, Mystery, Fantasy, Sci-Fi, Horror, Slice-of-Life
+- **50+ Story Templates**: Pre-written prompts organized by theme
+- **Custom Prompts**: Create your own story starters
+- **Theme-Based Styling**: Each theme has unique colors and gradients
 
-1. Go to your Supabase project: https://supabase.com/dashboard/project/qwafuwhkksaffmbzfqpq
-2. Click "SQL Editor" in the left sidebar
-3. Copy and paste the SQL from `supabase-migration.sql` (in project root)
-4. Click "Run" to create the tables
+### 📏 NEW - Multiple Story Modes
+- **Quick Mode** (25 words): 5-minute stories
+- **Standard Mode** (75 words): Classic experience
+- **Epic Mode** (150 words): Long-form storytelling (Premium)
+- **Sentence Mode** (20 sentences): Full sentence turns (Premium)
 
-That's it! The app will now sync stories between all devices.
+### 🎤 NEW - Voice Input (Premium)
+- Record words instead of typing
+- More intimate and spontaneous
+- Audio playback in story view
 
-### ✅ Partner Connection NOW WORKS
-- **True Multi-Device**: Create story on one device, join on another
-- **Session Codes**: Share 6-digit code with your partner
-- **Real-Time Turns**: Both users see updates instantly
-- **Automatic Sync**: No manual refresh needed
+### 📸 NEW - Photo Integration (Premium)
+- Attach photos to stories
+- Visual memory books
+- Cover photos for stories
 
-### ✅ Shuffle Prompt Added
-- **Shuffle Button**: Tap the shuffle icon to get random prompts
-- **30 Prompts**: Rotating collection of creative story ideas
-- **Quick Start**: Tap prompt to instantly create story
+### 📤 NEW - Story Export & Sharing (Premium)
+- Export as beautiful PDFs
+- Generate shareable images
+- Print-ready formatting
 
-### ✅ Improved UI/UX
-- **Larger Buttons**: Better tap targets with py-4 and py-5
-- **Elegant Word Input**: Large, centered text input (text-2xl)
-- **Better Shadows**: Professional depth with improved elevation
-- **Error Messages**: Clear warnings with icons
-- **Polished Design**: Production-quality throughout
+### 🏆 NEW - Streak Tracking
+- Daily writing streaks
+- Milestone celebrations
+- Activity statistics
+- Longest streak tracking
+
+### 🏷️ NEW - Tags & Collections
+- Organize stories with custom tags
+- Filter by theme, date, or mood
+- Better story management
+
+### 💕 NEW - Partner Reactions
+- React to completed stories with emojis
+- 10 reaction options
+- See partner's reactions
+
+## 💎 Premium Features
+
+**Free Tier includes:**
+- 3 active stories
+- 3 themes (Romance, Comedy, Slice-of-Life)
+- Quick & Standard modes
+- Basic templates
+
+**Premium Unlocks:**
+- ✨ Unlimited active stories
+- 🎨 All 8 themes
+- 📚 50+ premium templates
+- 🎤 Voice input
+- 📸 Photo attachments
+- 📤 Story export (PDF/Image)
+- 🏷️ Custom tags
+- 🚀 Epic & Sentence modes
+
+## 🛠 Setup Instructions
+
+### 1. Run Database Migration
+
+The app requires new database tables. Run this SQL in Supabase:
+
+1. Go to: https://supabase.com/dashboard/project/qwafuwhkksaffmbzfqpq/sql
+2. Copy and paste the SQL from `supabase-migration.sql`
+3. Click "Run"
+
+New tables added:
+- `user_stats` - Streak tracking
+- `story_photos` - Photo attachments
+- Enhanced `stories` table with theme, mode, tags, reactions
+- Enhanced `story_entries` with audio/photo URLs
+
+### 2. Set Up RevenueCat (Optional)
+
+For real subscriptions:
+1. Go to Vibecode app → API tab
+2. Add RevenueCat integration
+3. Configure your products in RevenueCat dashboard
+4. The app currently uses local premium status for testing
 
 ## 🎮 How to Use
 
-### Create & Share Story
-1. Tap "New Story" or use daily prompt
-2. Story gets a 6-digit code (shown in story detail)
-3. Share code with your partner
+### Start a New Story
+1. Tap "New Story" on home
+2. Choose a theme and mode
+3. Select a template or create custom prompt
+4. Start writing!
 
-### Join Partner's Story
-1. Tap "Join" button on home
-2. Enter partner's 6-digit code
-3. Start writing together!
+### Premium Features
+- Tap "GO PRO" to see paywall
+- Subscribe to unlock all features
+- Restore purchases anytime
 
 ### Take Turns
-- Only add words on your turn
-- See "Your turn" vs "Waiting for partner"
-- Last 3 words visible for context
-- Story completes at 75 words
+- Write one word (or sentence in Sentence mode)
+- See last 3 words for context
+- Wait for partner's turn
+- Story completes at word limit
 
-## ✨ Features
+### Add Voice & Photos (Premium)
+- Tap microphone icon to record word
+- Tap camera icon to add photos
+- Photos appear in story timeline
 
-- **Turn-Based Gameplay**: One word at a time
-- **Limited Context**: Only see last 3 words
-- **Progress Tracking**: Visual progress bar
-- **Story Reveal**: Beautiful animation when complete
-- **Daily Prompts**: Fresh ideas with shuffle
-- **Memories**: Browse finished stories
-- **Production Design**: Warm, cozy scrapbook aesthetic
+### Export Stories (Premium)
+- Tap export button on finished stories
+- Choose PDF or image format
+- Share on social or print
+
+## ✨ Complete Feature List
+
+**Core Features:**
+- Turn-based word writing
+- Real-time cloud sync (Supabase)
+- Partner connection via 6-digit codes
+- Progress tracking
+- Story reveal animations
+
+**New Features:**
+- 8 themed story modes
+- 4 length modes (Quick/Standard/Epic/Sentence)
+- 50+ curated templates
+- Voice recording
+- Photo attachments
+- Story export (PDF/Image)
+- Streak tracking
+- Partner reactions
+- Tags & collections
+- Premium paywall
 
 ## 🛠 Tech Stack
 
-- Expo SDK 53 + React Native 0.76.7
-- **Supabase** (PostgreSQL + Real-time subscriptions)
-- Zustand (local state only for user profile)
-- React Navigation
-- Nativewind + TailwindCSS
-- react-native-reanimated
-- TypeScript
+- **Frontend**: Expo SDK 53 + React Native 0.76.7
+- **Backend**: Supabase (PostgreSQL + Real-time)
+- **Payments**: RevenueCat (subscription management)
+- **State**: Zustand with AsyncStorage
+- **Navigation**: React Navigation (Native Stack)
+- **Styling**: Nativewind + TailwindCSS v3
+- **Animations**: react-native-reanimated v3
+- **Voice**: expo-av (audio recording)
+- **Camera**: expo-camera, expo-image-picker
+- **Export**: react-native-view-shot (screenshots)
+- **TypeScript**: Full type safety
 
 ## 📱 App Structure
 
-### Database (Supabase)
-- **stories** table: Story metadata (title, session code, turn info)
-- **story_entries** table: Individual words with timestamps
-- Real-time subscriptions for instant sync
-
-### Local State (Zustand)
-- **storyStore**: Cached stories + user profile (syncs with Supabase)
-
 ### Screens
-- HomeScreen (with shuffleable prompt)
-- StoryDetailScreen (improved UI)
-- JoinSessionScreen (now working!)
-- StoryRevealScreen
-- MemoriesScreen
-- SettingsScreen
+- **HomeScreen**: Story list with template prompt
+- **TemplateSelectionScreen**: Theme/mode picker with templates
+- **StoryDetailScreen**: Writing interface with voice/photo
+- **StoryRevealScreen**: Animated story completion
+- **MemoriesScreen**: Finished stories with reactions
+- **JoinSessionScreen**: Partner connection
+- **SettingsScreen**: Profile and premium management
 
-## 🎨 Design Highlights
+### New Components
+- **PaywallModal**: Beautiful subscription UI
+- **TemplateCard**: Theme-styled template display
+- **VoiceRecorder**: Audio recording interface
+- **PhotoPicker**: Image selection/capture
+- **StreakDisplay**: Daily streak visualization
+- **ReactionPicker**: Emoji reaction selector
+- **ExportModal**: PDF/Image export options
 
-- Warm color palette (#FFF8F0, #8B7355, #D4A5A5)
-- Paper-like rounded cards
-- Custom modals (no native alerts)
-- Smooth animations
-- Professional shadows and spacing
+### Services
+- **revenueCat.ts**: Subscription management
+- **storyConstants.ts**: Themes, templates, modes
 
-## Production Ready! 🚀
+### Database Schema
+- **stories**: Enhanced with theme, mode, tags, reactions, cover_photo
+- **story_entries**: Enhanced with audio_url, photo_url
+- **user_stats**: New table for streaks
+- **story_photos**: New table for photo gallery
 
-All core features working with **real-time cloud sync**! Partners can now truly write stories together across devices. Just run the SQL migration once and start creating memories!
+## 🎨 Design System
+
+**Colors:**
+- Background: #FFF8F0 (warm paper)
+- Primary: #D4A5A5 (rose)
+- Text: #8B7355 (brown)
+- Accent: #A0927D (muted gold)
+
+**Theme Colors:**
+- Romance: Pink gradients
+- Adventure: Green gradients
+- Comedy: Yellow gradients
+- Mystery: Purple gradients
+- Fantasy: Violet gradients
+- Sci-Fi: Blue gradients
+- Horror: Dark red gradients
+- Slice-of-Life: Cyan gradients
+
+## 🚀 Production Ready!
+
+All features implemented and ready for:
+- ✅ Database migration
+- ✅ RevenueCat configuration (or use local premium mode)
+- ✅ App Store submission
+- ✅ Real users and subscriptions
+
+**Next Steps:**
+1. Run the SQL migration
+2. Configure RevenueCat (optional - works with mock mode)
+3. Test all premium features
+4. Submit to App Store
+5. Start earning from subscriptions!
 
 ---
 
-Built with ❤️ • **Cloud-synced!** • **Real-time updates!** • **Beautiful design!**
+**Built with ❤️ • Cloud-synced! • Premium Features! • Beautiful Design!**
+
+WordChain - Create memories together, one word at a time ✨
+
