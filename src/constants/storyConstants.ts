@@ -1,4 +1,4 @@
-import { StoryTheme, StoryMode, StoryTemplate, Reaction } from "../types/story";
+import { StoryTheme, StoryMode, StoryTemplate } from "../types/story";
 
 // Theme definitions with colors and descriptions
 export const THEMES: Record<StoryTheme, { color: string; gradient: string[]; description: string }> = {
@@ -111,27 +111,12 @@ export const STORY_TEMPLATES: StoryTemplate[] = [
   { id: "sol3", title: "Rainy Day", theme: "slice-of-life", prompt: "On this cozy rainy afternoon...", isPremium: false },
 ];
 
-// Reaction emojis
-export const REACTIONS: Reaction[] = [
-  { emoji: "❤️", label: "Love it" },
-  { emoji: "😂", label: "Hilarious" },
-  { emoji: "😍", label: "So sweet" },
-  { emoji: "🥰", label: "Adorable" },
-  { emoji: "🔥", label: "Fire" },
-  { emoji: "✨", label: "Magical" },
-  { emoji: "🎉", label: "Amazing" },
-  { emoji: "💯", label: "Perfect" },
-  { emoji: "🤩", label: "Wow" },
-  { emoji: "💕", label: "Hearts" },
-];
-
 // Premium features list
 export const PREMIUM_FEATURES = {
   unlimitedStories: "Unlimited active stories (Free: 3)",
   premiumThemes: "All 8 themes unlocked",
   premiumTemplates: "50+ premium story templates",
   voiceInput: "Voice recording for words",
-  customTags: "Organize with custom tags",
   advancedModes: "Epic & Sentence modes",
   streakTracking: "Track your writing streaks",
 };

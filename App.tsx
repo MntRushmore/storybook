@@ -3,9 +3,13 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootNavigator } from "./src/navigation/RootNavigator";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useAuthStore } from "./src/state/authStore";
 import { useStoryStore } from "./src/state/storyStore";
 import { registerForPushNotifications } from "./src/services/pushNotifications";
+import { SplashScreen } from "./src/screens/SplashScreen";
+import { LoginScreen } from "./src/screens/LoginScreen";
+import { SignUpScreen } from "./src/screens/SignUpScreen";
 
 /*
 IMPORTANT NOTICE: DO NOT REMOVE
@@ -29,28 +33,71 @@ const openai_api_key = Constants.expoConfig.extra.apikey;
 */
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+  const [authScreen, setAuthScreen] = useState<"login" | "signup">("login");
+
+  const user = useAuthStore(s => s.user);
+  const isInitialized = useAuthStore(s => s.isInitialized);
   const userProfile = useStoryStore(s => s.userProfile);
   const loadUserStories = useStoryStore(s => s.loadUserStories);
 
   useEffect(() => {
-    // Register for push notifications on app start
-    registerForPushNotifications().then(token => {
-      if (token) {
-        console.log("Push notification token:", token);
-        // You could save this token to the user profile or send to backend
-      }
-    }).catch(error => {
-      console.error("Error registering for push notifications:", error);
-    });
-  }, []);
+    // Register for push notifications when user is logged in
+    if (user) {
+      registerForPushNotifications().then(token => {
+        if (token) {
+          console.log("Push notification token:", token);
+          // TODO: Save token to user profile in Supabase
+        }
+      }).catch(error => {
+        console.error("Error registering for push notifications:", error);
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
-    // Load stories from Supabase when app starts
-    if (userProfile) {
+    // Load stories from Supabase when user is authenticated
+    if (user && userProfile) {
       loadUserStories();
     }
-  }, [userProfile, loadUserStories]);
+  }, [user, userProfile, loadUserStories]);
 
+  // Show splash screen while initializing
+  if (showSplash) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SplashScreen onReady={() => setShowSplash(false)} />
+      </GestureHandlerRootView>
+    );
+  }
+
+  // Show auth screens if not logged in
+  if (!user && isInitialized) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          {authScreen === "login" ? (
+            <LoginScreen
+              onSignUpPress={() => setAuthScreen("signup")}
+              onSuccess={() => {
+                // Navigation will happen automatically when user state changes
+              }}
+            />
+          ) : (
+            <SignUpScreen
+              onSignInPress={() => setAuthScreen("login")}
+              onSuccess={() => {
+                // Navigation will happen automatically when user state changes
+              }}
+            />
+          )}
+          <StatusBar style="light" />
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    );
+  }
+
+  // Show main app
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

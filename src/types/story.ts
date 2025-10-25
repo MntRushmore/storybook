@@ -32,8 +32,6 @@ export interface Story {
   isRevealed: boolean; // Has the story reveal animation been shown
   theme: StoryTheme; // Story theme
   mode: StoryMode; // Story mode
-  tags: string[]; // Story tags
-  reactions: { [userId: string]: string }; // User reactions (emoji)
   isPremium: boolean; // Premium features used
 }
 
@@ -56,11 +54,6 @@ export interface UserStats {
   totalWords: number;
   createdAt: number;
   updatedAt: number;
-}
-
-export interface Reaction {
-  emoji: string;
-  label: string;
 }
 
 export interface StoryTemplate {

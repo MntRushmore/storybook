@@ -103,8 +103,6 @@ export const useStoryStore = create<StoryState>()(
           isRevealed: false,
           theme: 'romance',
           mode: 'standard',
-          tags: [],
-          reactions: {},
           isPremium: false,
         };
 
@@ -418,8 +416,6 @@ export const useStoryStore = create<StoryState>()(
           isRevealed: storyData.is_revealed,
           theme: storyData.theme || 'romance',
           mode: storyData.mode || 'standard',
-          tags: storyData.tags || [],
-          reactions: storyData.reactions || {},
           isPremium: storyData.is_premium || false,
         };
 

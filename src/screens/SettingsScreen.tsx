@@ -9,9 +9,11 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
+import { useAuthStore } from "../state/authStore";
 import { Ionicons } from "@expo/vector-icons";
 import { PaywallModal } from "../components/PaywallModal";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -33,11 +35,29 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const stories = useStoryStore(s => s.stories);
   const generateSessionCode = useStoryStore(s => s.generateSessionCode);
   const updateUserProfile = useStoryStore(s => s.updateUserProfile);
+  const signOut = useAuthStore(s => s.signOut);
 
   const isPremium = userProfile?.isPremium || false;
 
   // Check if user has any stories with a partner
   const hasPartner = stories.some(story => story.partnerId && story.partnerId !== userProfile?.userId);
+
+  const handleSignOut = () => {
+    Alert.alert(
+      "Sign Out",
+      "Are you sure you want to sign out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign Out",
+          style: "destructive",
+          onPress: async () => {
+            await signOut();
+          },
+        },
+      ]
+    );
+  };
 
   const handleGenerateCode = () => {
     const code = generateSessionCode();
@@ -199,6 +219,25 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
               </View>
             </View>
           )}
+        </View>
+
+        {/* Account Section */}
+        <View className="bg-white rounded-2xl p-5 shadow-sm border border-[#E8D5C4] mb-4">
+          <Text className="text-[#8B7355] font-semibold text-base mb-3">
+            Account
+          </Text>
+          <Pressable
+            onPress={handleSignOut}
+            className="flex-row items-center justify-between py-3"
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="log-out-outline" size={20} color="#C98686" />
+              <Text className="text-[#C98686] text-base ml-3 font-medium">
+                Sign Out
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#C98686" />
+          </Pressable>
         </View>
 
         {/* About Section */}
