@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
@@ -36,12 +36,17 @@ export function StoryRevealScreen({
   const scale = useSharedValue(0.3);
   const opacity = useSharedValue(0);
   const heartScale = useSharedValue(0);
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
     if (!story) {
       navigation.goBack();
       return;
     }
+
+    // Only run animation once
+    if (hasAnimated.current) return;
+    hasAnimated.current = true;
 
     // Mark story as revealed
     revealStory(storyId);
@@ -64,7 +69,7 @@ export function StoryRevealScreen({
         withSpring(1, { damping: 15 })
       )
     );
-  }, [story, storyId]);
+  }, [storyId, navigation]);
 
   const pageStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

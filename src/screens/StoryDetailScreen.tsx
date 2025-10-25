@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -34,6 +34,7 @@ export function StoryDetailScreen({
   const [showInput, setShowInput] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
+  const hasNavigatedToReveal = useRef(false);
 
   const story = useStoryStore(s => s.getStoryById(storyId));
   const userProfile = useStoryStore(s => s.userProfile);
@@ -47,11 +48,12 @@ export function StoryDetailScreen({
       return;
     }
 
-    // Auto-navigate to reveal screen when story reaches max words
-    if (story.isFinished && !story.isRevealed) {
+    // Auto-navigate to reveal screen when story reaches max words (only once)
+    if (story.isFinished && !story.isRevealed && !hasNavigatedToReveal.current) {
+      hasNavigatedToReveal.current = true;
       navigation.navigate("StoryReveal", { storyId });
     }
-  }, [story, navigation, storyId]);
+  }, [story?.isFinished, story?.isRevealed, navigation, storyId]);
 
   if (!story || !userProfile) {
     return null;
