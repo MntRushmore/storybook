@@ -138,13 +138,12 @@ export async function getSubscriptionPackages() {
 export function requiresPremium(feature: string): boolean {
   const premiumFeatures = [
     "voice_input",
-    "photo_attachments",
-    "story_export",
     "premium_themes",
     "premium_templates",
     "epic_mode",
     "sentence_mode",
     "unlimited_stories",
+    "streak_tracking",
   ];
 
   return premiumFeatures.includes(feature);

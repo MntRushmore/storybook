@@ -131,18 +131,15 @@ export const PREMIUM_FEATURES = {
   premiumThemes: "All 8 themes unlocked",
   premiumTemplates: "50+ premium story templates",
   voiceInput: "Voice recording for words",
-  photoAttachments: "Add photos to stories",
-  storyExport: "Export as beautiful PDFs/images",
   customTags: "Organize with custom tags",
   advancedModes: "Epic & Sentence modes",
+  streakTracking: "Track your writing streaks",
 };
 
 // Free tier limits
 export const FREE_LIMITS = {
   maxActiveStories: 3,
-  maxPhotosPerStory: 0,
   canUseVoice: false,
-  canExport: false,
   availableThemes: ["romance", "comedy", "slice-of-life"] as StoryTheme[],
   availableModes: ["quick", "standard"] as StoryMode[],
 };

@@ -5,6 +5,7 @@ import { Story, StoryEntry, UserProfile } from "../types/story";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "../api/supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useStreakStore } from "./streakStore";
 
 interface StoryState {
   stories: Story[];
@@ -160,6 +161,9 @@ export const useStoryStore = create<StoryState>()(
           console.error("Error adding word:", entryError);
           return;
         }
+
+        // Update streak after successfully adding a word
+        await useStreakStore.getState().updateStreak(userProfile.userId);
 
         // Calculate next turn and finish status
         const newEntryCount = story.entries.length + 1;
@@ -364,7 +368,6 @@ export const useStoryStore = create<StoryState>()(
             userName: e.user_name,
             timestamp: e.timestamp,
             audioUrl: e.audio_url,
-            photoUrl: e.photo_url,
           })),
           createdAt: storyData.created_at,
           updatedAt: storyData.updated_at,
@@ -378,7 +381,6 @@ export const useStoryStore = create<StoryState>()(
           theme: storyData.theme || 'romance',
           mode: storyData.mode || 'standard',
           tags: storyData.tags || [],
-          coverPhotoUrl: storyData.cover_photo_url,
           reactions: storyData.reactions || {},
           isPremium: storyData.is_premium || false,
         };
@@ -395,6 +397,9 @@ export const useStoryStore = create<StoryState>()(
       loadUserStories: async () => {
         const userProfile = get().userProfile;
         if (!userProfile) return;
+
+        // Load user streak stats
+        await useStreakStore.getState().loadStats(userProfile.userId);
 
         // Fetch stories where user is creator or partner
         const { data: storiesData, error } = await supabase

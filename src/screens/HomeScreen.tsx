@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { CreateStoryModal } from "../components/CreateStoryModal";
 import { SetupProfileModal } from "../components/SetupProfileModal";
+import { StreakDisplay } from "../components/StreakDisplay";
 import { getTodayPrompt, getRandomPrompt } from "../utils/dailyPrompts";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
@@ -65,7 +66,11 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         </View>
       </View>
 
-      <ScrollView className="flex-1 px-6 pt-6">
+      <ScrollView className="flex-1 pt-6">
+        {/* Streak Display */}
+        <StreakDisplay />
+
+        <View className="px-6">
         {/* Daily Prompt Card */}
         <View
           className="bg-gradient-to-br from-[#D4A5A5] to-[#C98686] rounded-2xl p-5 mb-6 shadow-sm"
@@ -189,6 +194,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             })}
           </View>
         )}
+        </View>
       </ScrollView>
 
       {/* Floating Action Buttons */}

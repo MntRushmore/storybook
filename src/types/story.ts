@@ -15,7 +15,6 @@ export interface StoryEntry {
   userName: string; // Store name for display
   timestamp: number;
   audioUrl?: string; // Voice recording URL
-  photoUrl?: string; // Photo URL
 }
 
 export interface Story {
@@ -34,7 +33,6 @@ export interface Story {
   theme: StoryTheme; // Story theme
   mode: StoryMode; // Story mode
   tags: string[]; // Story tags
-  coverPhotoUrl?: string; // Cover photo
   reactions: { [userId: string]: string }; // User reactions (emoji)
   isPremium: boolean; // Premium features used
 }
@@ -60,13 +58,9 @@ export interface UserStats {
   updatedAt: number;
 }
 
-export interface StoryPhoto {
-  id: string;
-  storyId: string;
-  photoUrl: string;
-  caption?: string;
-  userId: string;
-  timestamp: number;
+export interface Reaction {
+  emoji: string;
+  label: string;
 }
 
 export interface StoryTemplate {
@@ -75,9 +69,4 @@ export interface StoryTemplate {
   theme: StoryTheme;
   prompt: string;
   isPremium: boolean;
-}
-
-export interface Reaction {
-  emoji: string;
-  label: string;
 }

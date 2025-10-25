@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
 import { Ionicons } from "@expo/vector-icons";
+import { PaywallModal } from "../components/PaywallModal";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -26,10 +27,13 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const [pairCode, setPairCode] = useState("");
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const userProfile = useStoryStore(s => s.userProfile);
   const generateSessionCode = useStoryStore(s => s.generateSessionCode);
   const updateUserProfile = useStoryStore(s => s.updateUserProfile);
+
+  const isPremium = userProfile?.isPremium || false;
 
   const handleGenerateCode = () => {
     const code = generateSessionCode();
@@ -93,6 +97,43 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
               )}
             </View>
           </View>
+        </View>
+
+        {/* Premium Section */}
+        <View className="bg-white rounded-2xl p-5 shadow-sm border border-[#E8D5C4] mb-4">
+          <View className="flex-row items-center mb-3">
+            <Ionicons name="diamond" size={24} color="#FFD700" />
+            <Text className="text-[#8B7355] font-semibold text-base ml-2">
+              Premium Status
+            </Text>
+          </View>
+
+          {isPremium ? (
+            <View>
+              <View className="bg-[#FFD700]/10 rounded-xl p-4 mb-3 border border-[#FFD700]/30">
+                <View className="flex-row items-center mb-2">
+                  <Ionicons name="checkmark-circle" size={20} color="#FFD700" />
+                  <Text className="text-[#8B7355] font-semibold ml-2">Premium Active</Text>
+                </View>
+                <Text className="text-[#A0886C] text-sm">
+                  You have access to all premium features including unlimited stories, all themes, and streak tracking.
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <View>
+              <Text className="text-[#A0886C] text-sm mb-4">
+                Upgrade to premium for unlimited stories, all themes, voice input, and more!
+              </Text>
+              <Pressable
+                onPress={() => setShowPaywall(true)}
+                className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-xl py-4 items-center"
+                style={{ backgroundColor: "#FFD700" }}
+              >
+                <Text className="text-white font-bold text-base">Go Premium ✨</Text>
+              </Pressable>
+            </View>
+          )}
         </View>
 
         {/* Couple Pairing Section */}
@@ -236,6 +277,15 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        visible={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onPurchaseSuccess={() => {
+          setShowPaywall(false);
+        }}
+      />
     </View>
   );
 }
