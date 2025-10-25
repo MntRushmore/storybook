@@ -7,7 +7,6 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "./src/state/authStore";
 import { useStoryStore } from "./src/state/storyStore";
 import { registerForPushNotifications } from "./src/services/pushNotifications";
-import { SplashScreen } from "./src/screens/SplashScreen";
 import { LoginScreen } from "./src/screens/LoginScreen";
 import { SignUpScreen } from "./src/screens/SignUpScreen";
 
@@ -33,7 +32,6 @@ const openai_api_key = Constants.expoConfig.extra.apikey;
 */
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
   const [authScreen, setAuthScreen] = useState<"login" | "signup">("login");
 
   const user = useAuthStore(s => s.user);
@@ -60,15 +58,6 @@ export default function App() {
       loadUserStories();
     }
   }, [user, loadUserStories]);
-
-  // Show splash screen while initializing
-  if (showSplash) {
-    return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SplashScreen onReady={() => setShowSplash(false)} />
-      </GestureHandlerRootView>
-    );
-  }
 
   // Show auth screens if not logged in
   if (!user && isInitialized) {
