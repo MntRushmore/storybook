@@ -68,7 +68,7 @@ export function LoginScreen({ onSignUpPress, onSuccess }: LoginScreenProps) {
       colors={["#E8B4B8", "#D4A5A5", "#B89B9B"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      className="flex-1"
+      style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1" edges={["top"]}>
         <KeyboardAvoidingView
