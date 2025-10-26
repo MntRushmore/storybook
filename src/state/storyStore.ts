@@ -378,19 +378,46 @@ export const useStoryStore = create<StoryState>()(
         set({ isLoading: true, error: null });
 
         try {
+          // Trim and validate code
+          const trimmedCode = code.trim();
+
+          console.log("Attempting to join with code:", trimmedCode);
+
           // Find story with matching session_code
           const { data: stories, error: searchError } = await supabase
             .from("stories")
             .select("*")
-            .eq("session_code", code)
+            .eq("session_code", trimmedCode)
             .limit(1);
 
-          if (searchError || !stories || stories.length === 0) {
+          console.log("Search result:", { stories, error: searchError });
+
+          if (searchError) {
+            console.error("Search error:", searchError);
+            set({ isLoading: false, error: "Database error. Please try again." });
+            return { success: false, error: "Database error. Please try again." };
+          }
+
+          if (!stories || stories.length === 0) {
+            console.log("No story found with code:", trimmedCode);
             set({ isLoading: false, error: "Invalid or expired code" });
             return { success: false, error: "Invalid or expired code" };
           }
 
           const story = stories[0];
+          console.log("Found story:", story.id, "Code:", story.session_code);
+
+          // Check if user is trying to join their own story
+          if (story.creator_id === user.id) {
+            set({ isLoading: false, error: "You cannot join your own story" });
+            return { success: false, error: "You cannot join your own story" };
+          }
+
+          // Check if story already has a partner
+          if (story.partner_id && story.partner_id !== user.id) {
+            set({ isLoading: false, error: "This story already has a partner" });
+            return { success: false, error: "This story already has a partner" };
+          }
 
           // Add user as partner if not already
           if (story.partner_id !== user.id) {

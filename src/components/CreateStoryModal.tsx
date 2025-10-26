@@ -35,20 +35,31 @@ export function CreateStoryModal({
 
   const handleCreate = async () => {
     if (title.trim()) {
-      const storyId = await createStory(title.trim());
+      try {
+        const storyId = await createStory(title.trim());
 
-      // Get the story to access its session code
-      const story = getStoryById(storyId);
-      if (story?.sessionCode) {
-        setStoryCode(story.sessionCode);
-        setCreatedStoryId(storyId);
-        setCreatedStoryTitle(title.trim());
-        setTitle("");
-        setShowCodeModal(true);
-      } else {
-        // Fallback if code is not available yet
-        setTitle("");
-        onStoryCreated(storyId);
+        // Wait a moment for the store to update
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Get the story to access its session code
+        const story = getStoryById(storyId);
+
+        console.log("Created story:", { storyId, sessionCode: story?.sessionCode });
+
+        if (story?.sessionCode) {
+          setStoryCode(story.sessionCode);
+          setCreatedStoryId(storyId);
+          setCreatedStoryTitle(title.trim());
+          setTitle("");
+          setShowCodeModal(true);
+        } else {
+          console.warn("Story created but no session code found:", storyId);
+          // Fallback if code is not available yet
+          setTitle("");
+          onStoryCreated(storyId);
+        }
+      } catch (error) {
+        console.error("Error creating story:", error);
       }
     }
   };
