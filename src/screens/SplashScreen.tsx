@@ -46,7 +46,7 @@ export function SplashScreen({ onReady }: SplashScreenProps) {
 
         {/* App Name */}
         <Text className="text-white text-4xl font-bold mb-2">
-          Our Story Book
+          Dear We
         </Text>
         <Text className="text-white/80 text-base mb-8">
           Create memories, one word at a time

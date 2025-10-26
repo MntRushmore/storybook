@@ -98,7 +98,7 @@ export function StoryDetailScreen({
 
   const handleShare = async () => {
     const storyCode = generateStoryCode(storyId);
-    const message = `Join my story "${story.title}"! Use code ${storyCode} in Our Story Book app.`;
+    const message = `Join my story "${story.title}"! Use code ${storyCode} in Dear We app.`;
 
     try {
       await Share.share({

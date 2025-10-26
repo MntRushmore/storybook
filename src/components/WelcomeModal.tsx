@@ -23,7 +23,7 @@ export function WelcomeModal({ visible, onClose }: WelcomeModalProps) {
   const steps = [
     {
       icon: "book" as const,
-      title: "Welcome to Our Story Book!",
+      title: "Welcome to Dear We!",
       description: "Create beautiful stories together, one word at a time. Share stories with friends, family, or anyone you want to write with!",
       color: "#D4A5A5",
     },

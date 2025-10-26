@@ -76,7 +76,7 @@ export function CreateStoryModal({
   };
 
   const handleShareCode = async () => {
-    const message = `Join my story "${createdStoryTitle}"! Use code ${storyCode} in Our Story Book app.`;
+    const message = `Join my story "${createdStoryTitle}"! Use code ${storyCode} in Dear We app.`;
 
     try {
       await Share.share({

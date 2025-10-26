@@ -152,7 +152,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
             About
           </Text>
           <Text className="text-[#A0886C] text-sm leading-6">
-            Our Story Book lets you create beautiful memories with anyone. Write stories one word or sentence at a time using story codes, save your favorites, and revisit them anytime.
+            Dear We lets you create beautiful memories with anyone. Write stories one word or sentence at a time using story codes, save your favorites, and revisit them anytime.
           </Text>
         </View>
       </ScrollView>

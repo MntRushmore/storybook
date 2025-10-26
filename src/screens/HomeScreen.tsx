@@ -61,7 +61,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <View className="flex-row items-center mb-1">
               <Ionicons name="book" size={28} color="white" />
               <Text className="text-white text-2xl font-bold ml-2">
-                Our Story Book
+                Dear We
               </Text>
             </View>
             <View className="flex-row items-center mt-1">
