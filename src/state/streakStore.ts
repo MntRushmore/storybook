@@ -108,9 +108,20 @@ export const useStreakStore = create<StreakState>()(
 
           if (error) {
             console.error("Error updating streak:", error);
+            console.log("Streak data that failed:", {
+              user_id: userId,
+              current_streak: currentStats.currentStreak,
+              longest_streak: currentStats.longestStreak,
+              last_activity_date: currentStats.lastActivityDate,
+              total_stories: currentStats.totalStories,
+              total_words: currentStats.totalWords,
+              created_at: currentStats.createdAt,
+              updated_at: currentStats.updatedAt,
+            });
           }
         } catch (error) {
           console.error("Error saving streak to DB:", error);
+          // Don't throw - allow the word addition to succeed even if streak fails
         }
       },
 
