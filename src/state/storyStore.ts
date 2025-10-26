@@ -22,6 +22,7 @@ interface StoryState {
 
   // Branch Mode actions
   createBranchStory: (prompt: string, theme?: string, mode?: string) => Promise<{ parentPromptId: string; creatorBranchId: string; partnerBranchId: string }>;
+  joinBranchWithCode: (code: string) => Promise<{ success: boolean; storyId?: string; error?: string }>;
   getBranchStories: (parentPromptId: string) => Story[];
   mergeBranches: (branch1Id: string, branch2Id: string) => Promise<string>;
 
@@ -379,13 +380,6 @@ export const useStoryStore = create<StoryState>()(
         const user = useAuthStore.getState().user;
         if (!user) throw new Error("User not authenticated");
 
-        const userProfile = user.user_metadata;
-        const partnerId = userProfile?.partner_id;
-
-        if (!partnerId) {
-          throw new Error("You need a partner to create branch stories");
-        }
-
         set({ isLoading: true, error: null });
 
         try {
@@ -398,7 +392,33 @@ export const useStoryStore = create<StoryState>()(
           // Generate a unique parent prompt ID
           const parentPromptId = `branch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-          // Create two separate stories - one for each partner
+          // Generate a unique 6-digit session code for the branch group
+          let sessionCode = "";
+          let isUnique = false;
+          let attempts = 0;
+          const maxAttempts = 10;
+
+          while (!isUnique && attempts < maxAttempts) {
+            sessionCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+            // Check if code already exists
+            const { data: existing } = await supabase
+              .from("stories")
+              .select("id")
+              .eq("session_code", sessionCode)
+              .limit(1);
+
+            if (!existing || existing.length === 0) {
+              isUnique = true;
+            }
+            attempts++;
+          }
+
+          if (!isUnique) {
+            throw new Error("Failed to generate unique story code");
+          }
+
+          // Create the creator's branch story
           const creatorStory = {
             title: prompt,
             creator_id: user.id,
@@ -412,26 +432,10 @@ export const useStoryStore = create<StoryState>()(
             collaboration_type: "branch",
             parent_prompt_id: parentPromptId,
             branch_author_id: user.id,
-            partner_id: partnerId,
+            session_code: sessionCode,
           };
 
-          const partnerStory = {
-            title: prompt,
-            creator_id: partnerId,
-            current_turn_user_id: partnerId,
-            max_words: maxWords,
-            is_finished: false,
-            is_revealed: false,
-            theme,
-            mode,
-            is_premium: mode === "epic" || mode === "sentence",
-            collaboration_type: "branch",
-            parent_prompt_id: parentPromptId,
-            branch_author_id: partnerId,
-            partner_id: user.id,
-          };
-
-          // Insert both stories
+          // Insert creator's story
           const { data: creatorData, error: creatorError } = await supabase
             .from("stories")
             .insert(creatorStory)
@@ -442,17 +446,7 @@ export const useStoryStore = create<StoryState>()(
             throw creatorError || new Error("Failed to create creator branch");
           }
 
-          const { data: partnerData, error: partnerError } = await supabase
-            .from("stories")
-            .insert(partnerStory)
-            .select()
-            .single();
-
-          if (partnerError || !partnerData) {
-            throw partnerError || new Error("Failed to create partner branch");
-          }
-
-          // Add initial prompt words to both stories (first 5 words)
+          // Add initial prompt words (first 5 words)
           if (prompt && prompt.trim()) {
             const words = prompt.trim().split(/\s+/).slice(0, 5);
 
@@ -465,37 +459,135 @@ export const useStoryStore = create<StoryState>()(
               timestamp: Date.now() + index,
             }));
 
-            const partnerEntries = words.map((word, index) => ({
-              story_id: partnerData.id,
-              word,
-              user_id: partnerId,
-              user_name: "Partner",
-              user_color: "#85B79D",
-              timestamp: Date.now() + index,
-            }));
-
-            await supabase.from("story_entries").insert([...creatorEntries, ...partnerEntries]);
+            await supabase.from("story_entries").insert(creatorEntries);
           }
 
-          // Sync both stories
+          // Sync the creator's story
           await get().syncStoryFromDB(creatorData.id);
-          await get().syncStoryFromDB(partnerData.id);
 
-          // Subscribe to both stories
+          // Subscribe to the story
           get().subscribeToStory(creatorData.id);
-          get().subscribeToStory(partnerData.id);
 
           set({ isLoading: false });
 
           return {
             parentPromptId,
             creatorBranchId: creatorData.id,
-            partnerBranchId: partnerData.id,
+            partnerBranchId: "", // Will be created when partner joins with code
           };
         } catch (error) {
           console.error("Error creating branch story:", error);
           set({ isLoading: false, error: (error as Error).message });
           throw error;
+        }
+      },
+
+      // When partner joins with code, create their branch
+      joinBranchWithCode: async (code: string) => {
+        const user = useAuthStore.getState().user;
+        if (!user) throw new Error("User not authenticated");
+
+        set({ isLoading: true, error: null });
+
+        try {
+          // Find the creator's branch story by code
+          const { data: creatorStory, error: findError } = await supabase
+            .from("stories")
+            .select("*")
+            .eq("session_code", code)
+            .eq("collaboration_type", "branch")
+            .single();
+
+          if (findError || !creatorStory) {
+            set({ isLoading: false, error: "Invalid story code" });
+            return { success: false, error: "Invalid story code" };
+          }
+
+          // Check if user is trying to join their own story
+          if (creatorStory.creator_id === user.id) {
+            set({ isLoading: false, error: "You cannot join your own story" });
+            return { success: false, error: "You cannot join your own story" };
+          }
+
+          // Check if partner branch already exists
+          const { data: existingBranch } = await supabase
+            .from("stories")
+            .select("id")
+            .eq("parent_prompt_id", creatorStory.parent_prompt_id)
+            .eq("branch_author_id", user.id)
+            .single();
+
+          if (existingBranch) {
+            // Partner branch already exists, just navigate to it
+            await get().syncStoryFromDB(existingBranch.id);
+            set({ isLoading: false });
+            return { success: true, storyId: existingBranch.id };
+          }
+
+          // Create partner's branch
+          const partnerStory = {
+            title: creatorStory.title,
+            creator_id: user.id,
+            current_turn_user_id: user.id,
+            max_words: creatorStory.max_words,
+            is_finished: false,
+            is_revealed: false,
+            theme: creatorStory.theme,
+            mode: creatorStory.mode,
+            is_premium: creatorStory.is_premium,
+            collaboration_type: "branch",
+            parent_prompt_id: creatorStory.parent_prompt_id,
+            branch_author_id: user.id,
+            partner_id: creatorStory.creator_id,
+            session_code: code,
+          };
+
+          const { data: partnerData, error: partnerError } = await supabase
+            .from("stories")
+            .insert(partnerStory)
+            .select()
+            .single();
+
+          if (partnerError || !partnerData) {
+            throw partnerError || new Error("Failed to create partner branch");
+          }
+
+          // Update creator's story with partner_id
+          await supabase
+            .from("stories")
+            .update({ partner_id: user.id })
+            .eq("id", creatorStory.id);
+
+          // Add initial prompt words to partner's branch (first 5 words)
+          if (creatorStory.title && creatorStory.title.trim()) {
+            const words = creatorStory.title.trim().split(/\s+/).slice(0, 5);
+
+            const partnerEntries = words.map((word: string, index: number) => ({
+              story_id: partnerData.id,
+              word,
+              user_id: user.id,
+              user_name: user.user_metadata?.name || "Partner",
+              user_color: "#85B79D",
+              timestamp: Date.now() + index,
+            }));
+
+            await supabase.from("story_entries").insert(partnerEntries);
+          }
+
+          // Sync both stories
+          await get().syncStoryFromDB(partnerData.id);
+          await get().syncStoryFromDB(creatorStory.id);
+
+          // Subscribe to both stories
+          get().subscribeToStory(partnerData.id);
+          get().subscribeToStory(creatorStory.id);
+
+          set({ isLoading: false });
+          return { success: true, storyId: partnerData.id };
+        } catch (error) {
+          console.error("Error joining branch story:", error);
+          set({ isLoading: false, error: (error as Error).message });
+          return { success: false, error: (error as Error).message };
         }
       },
 
@@ -569,87 +661,68 @@ export const useStoryStore = create<StoryState>()(
           // Trim and validate code
           const trimmedCode = code.trim();
 
-          console.log("==== JOIN WITH CODE DEBUG ====");
-          console.log("Attempting to join with code:", trimmedCode);
-          console.log("Code length:", trimmedCode.length);
-          console.log("Code type:", typeof trimmedCode);
-          console.log("Current user ID:", user.id);
-
-          // First, let's check if the column exists by trying to select it
-          const { data: testQuery, error: testError } = await supabase
-            .from("stories")
-            .select("id, session_code, creator_id, partner_id")
-            .not("session_code", "is", null)
-            .limit(5);
-
-          console.log("Test query (all stories with codes):", testQuery);
-          console.log("Test query error:", testError);
-
-          // Now try the actual search
+          // Check if the code belongs to a branch story
           const { data: stories, error: searchError } = await supabase
             .from("stories")
             .select("*")
             .eq("session_code", trimmedCode);
 
-          console.log("Search result - stories:", stories);
-          console.log("Search result - error:", searchError);
-          console.log("Search result - count:", stories?.length || 0);
-
           if (searchError) {
-            console.error("Search error details:", JSON.stringify(searchError));
             set({ isLoading: false, error: `Database error: ${searchError.message}` });
             return { success: false, error: `Database error: ${searchError.message}` };
           }
 
           if (!stories || stories.length === 0) {
-            console.log("❌ No story found with code:", trimmedCode);
-            console.log("Available codes:", testQuery?.map(s => s.session_code));
             set({ isLoading: false, error: "Invalid or expired code" });
             return { success: false, error: "Invalid or expired code" };
           }
 
           const story = stories[0];
-          console.log("✅ Found story:", {
-            id: story.id,
-            session_code: story.session_code,
-            creator_id: story.creator_id,
-            partner_id: story.partner_id,
-            title: story.title
-          });
 
-          // Check if user is trying to join their own story
+          // Check if it's a branch story
+          if (story.collaboration_type === "branch") {
+            // Use branch-specific join logic
+            return await get().joinBranchWithCode(trimmedCode);
+          }
+
+          // Classic mode join logic (existing code)
+          // Check if trying to join own story
           if (story.creator_id === user.id) {
-            console.log("❌ User trying to join own story");
             set({ isLoading: false, error: "You cannot join your own story" });
             return { success: false, error: "You cannot join your own story" };
           }
 
-          // Check if story already has a partner
+          // Check if already has a partner
           if (story.partner_id && story.partner_id !== user.id) {
-            console.log("❌ Story already has a partner:", story.partner_id);
             set({ isLoading: false, error: "This story already has a partner" });
             return { success: false, error: "This story already has a partner" };
           }
 
-          console.log("✅ All checks passed, adding user as partner");
-
-          // Add user as partner if not already
-          if (story.partner_id !== user.id) {
-            const { error: updateError } = await supabase
-              .from("stories")
-              .update({ partner_id: user.id })
-              .eq("id", story.id);
-
-            if (updateError) throw updateError;
+          // Check if already joined
+          if (story.partner_id === user.id) {
+            await get().syncStoryFromDB(story.id);
+            set({ isLoading: false });
+            return { success: true, storyId: story.id };
           }
 
-          // Reload stories to include newly joined story
-          await get().loadUserStories();
+          // Join the story
+          const { error: updateError } = await supabase
+            .from("stories")
+            .update({ partner_id: user.id })
+            .eq("id", story.id);
+
+          if (updateError) {
+            set({ isLoading: false, error: `Failed to join: ${updateError.message}` });
+            return { success: false, error: `Failed to join: ${updateError.message}` };
+          }
+
+          await get().syncStoryFromDB(story.id);
+          get().subscribeToStory(story.id);
 
           set({ isLoading: false });
           return { success: true, storyId: story.id };
         } catch (error) {
-          console.error("Error joining with code:", error);
+          console.error("Error joining story:", error);
           set({ isLoading: false, error: (error as Error).message });
           return { success: false, error: (error as Error).message };
         }
