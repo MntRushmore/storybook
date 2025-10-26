@@ -135,6 +135,7 @@ export const useStoryStore = create<StoryState>()(
               word,
               user_id: user.id,
               user_name: user.user_metadata?.name || "User",
+              user_color: "#D4A5A5",
               timestamp: Date.now() + index,
             }));
 
@@ -215,6 +216,7 @@ export const useStoryStore = create<StoryState>()(
               word,
               user_id: user.id,
               user_name: user.user_metadata?.name || "User",
+              user_color: "#D4A5A5",
               timestamp: Date.now(),
             });
 

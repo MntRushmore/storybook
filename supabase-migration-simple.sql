@@ -12,6 +12,7 @@ ALTER TABLE stories ADD COLUMN IF NOT EXISTS session_code TEXT;
 
 -- Add audio column to story_entries (if it doesn't exist)
 ALTER TABLE story_entries ADD COLUMN IF NOT EXISTS audio_url TEXT;
+ALTER TABLE story_entries ADD COLUMN IF NOT EXISTS user_color TEXT DEFAULT '#D4A5A5';
 
 -- Create user_stats table for streak tracking
 CREATE TABLE IF NOT EXISTS user_stats (
