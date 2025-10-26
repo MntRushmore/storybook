@@ -1,6 +1,14 @@
 -- Complete Migration for Branch Mode Support
 -- This migration adds all required columns for Branch Mode and session codes
 
+-- Step 0: Fix foreign key constraints (if they exist and are causing issues)
+-- Remove overly restrictive foreign keys that reference profiles table
+ALTER TABLE stories
+DROP CONSTRAINT IF EXISTS stories_creator_id_fkey;
+
+ALTER TABLE stories
+DROP CONSTRAINT IF EXISTS stories_partner_id_fkey;
+
 -- Step 1: Add session_code column (if not exists)
 ALTER TABLE stories
 ADD COLUMN IF NOT EXISTS session_code TEXT;

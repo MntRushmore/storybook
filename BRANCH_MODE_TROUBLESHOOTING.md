@@ -1,5 +1,28 @@
 # Branch Mode Troubleshooting Guide
 
+## Error: "insert or update on table stories violates foreign key constraint"
+
+**Full Error:** `"insert or update on table \"stories\" violates foreign key constraint \"stories_creator_id_fkey\""`
+
+**Problem:** Your database has a foreign key constraint that requires `creator_id` to exist in the `profiles` table. This is overly restrictive for the app's auth flow.
+
+**Solution:**
+1. Go to https://supabase.com/dashboard/project/YOUR_PROJECT/sql
+2. Open the file `supabase-fix-foreign-keys.sql`
+3. Copy the SQL content
+4. Paste it into the Supabase SQL Editor
+5. Click "Run"
+
+This will remove the restrictive foreign key constraint while keeping your data safe.
+
+**Why This Happens:**
+- Some database setups create foreign keys to a `profiles` table
+- But the app uses Supabase Auth's `auth.users` directly
+- The constraint prevents story creation until a profile entry exists
+- Removing it allows normal story creation
+
+---
+
 ## Error: "Could not find the 'session_code' column"
 
 **Problem:** The database migration hasn't been run yet.
