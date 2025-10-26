@@ -10,7 +10,7 @@ import { useAuthStore } from "../state/authStore";
 import { updatePremiumStatus } from "./profileService";
 
 const REVENUE_CAT_API_KEY = Constants.expoConfig?.extra?.revenueCatApiKey || process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || "";
-const ENTITLEMENT_ID = "premium";
+const ENTITLEMENT_ID = "Pro";
 
 let isInitialized = false;
 
