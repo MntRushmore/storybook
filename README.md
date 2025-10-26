@@ -18,11 +18,12 @@ A beautiful storytelling app where you can write stories with anyone, one word a
 - **Database Storage**: Codes are permanently stored and validated
 - **No Partner Setup Required**: Anyone with the code can join your story
 
-### ✨ Premium Subscription (Local Mode)
-- **Easy Premium Toggle**: Enable premium directly in Settings
-- **No RevenueCat Required**: Works with local state storage
+### ✨ Premium Subscription with RevenueCat
+- **Real Payment Integration**: Full RevenueCat SDK implementation
+- **Monthly & Annual Plans**: Choose your subscription
+- **Restore Purchases**: Recover previous subscriptions
 - **Feature Gating**: Smart premium feature management
-- **Instant Activation**: Toggle premium on/off anytime
+- **Instant Activation**: Access premium features immediately after purchase
 
 ### 🔥 Streak Tracking
 - **Daily Writing Streaks**: Track consecutive days of writing
@@ -106,18 +107,34 @@ This includes everything in Option A plus:
 
 **Note:** If you get permission errors, use Option A instead!
 
-### 2. Enable Premium (Optional)
+### 2. RevenueCat Setup (Required for Premium)
 
-Premium works with local storage - no external setup needed!
+**To enable real in-app purchases:**
 
-To activate premium:
-1. Open the app
-2. Go to Settings
-3. Tap "Go Premium"
-4. Tap "Start Premium" button
-5. Done! All premium features unlocked
+1. **Create RevenueCat Account**
+   - Sign up at https://www.revenuecat.com
+   - Create a new project
 
-**That's it!** No API keys, no payment setup, no RevenueCat account needed.
+2. **Configure App Store Connect**
+   - Create your app in App Store Connect
+   - Set up in-app purchase products (e.g., monthly, annual subscriptions)
+
+3. **Connect RevenueCat to App Store**
+   - In RevenueCat dashboard, add your iOS app
+   - Connect to App Store Connect using API key
+   - Configure your products and entitlements
+
+4. **Add API Key**
+   - Copy your RevenueCat public API key
+   - Add to `.env` file:
+     ```
+     EXPO_PUBLIC_REVENUECAT_API_KEY=your_key_here
+     ```
+
+5. **Done!**
+   - The app will automatically initialize RevenueCat
+   - Users can now purchase premium subscriptions
+   - Purchases are synced across devices
 
 ## 🎮 How to Use
 
@@ -148,8 +165,10 @@ To activate premium:
 
 ### Enable Premium
 - Tap "Go Premium" in Settings
-- Subscribe to unlock all features
-- Premium status syncs locally
+- Choose monthly or annual subscription
+- Complete purchase through App Store
+- Premium status syncs across devices
+- Restore purchases if needed
 
 ### Track Your Streaks
 - Write daily to maintain your streak
@@ -193,7 +212,7 @@ To activate premium:
 
 - **Frontend**: Expo SDK 53 + React Native 0.76.7
 - **Backend**: Supabase (PostgreSQL + Real-time)
-- **Payments**: Local storage (no external service needed)
+- **Payments**: RevenueCat + Apple In-App Purchase
 - **State**: Zustand with AsyncStorage
 - **Navigation**: React Navigation (Native Stack)
 - **Styling**: Nativewind + TailwindCSS v3
@@ -213,14 +232,14 @@ To activate premium:
 - **SettingsScreen**: Profile and premium management
 
 ### New Components
-- **PaywallModal**: Beautiful subscription UI (local mode)
+- **PaywallModal**: Beautiful subscription UI with real RevenueCat payments
 - **StreakDisplay**: Daily streak visualization
 - **TemplateCard**: Theme-styled template display
 - **VoiceRecorder**: Audio recording interface
 - **WelcomeModal**: Interactive 5-step tutorial for new users
 
 ### Services
-- **revenueCat.ts**: Premium management (local storage)
+- **revenueCat.ts**: Premium management with RevenueCat SDK
 - **streakStore.ts**: Streak tracking state
 - **storyConstants.ts**: Themes, templates, modes
 
@@ -253,26 +272,27 @@ To activate premium:
 
 All features implemented and ready for:
 - ✅ Database migration (simple version available)
-- ✅ Local premium mode (no external setup)
+- ✅ RevenueCat integration (SDK installed, real payments enabled)
 - ✅ Streak tracking
 - ✅ App Store submission
 - ✅ Real users
 
 **Next Steps:**
 1. Run the simple SQL migration
-2. Test all features
-3. Enable premium in Settings
-4. Submit to App Store
-5. Share with users!
+2. Complete RevenueCat setup in dashboard
+3. Add your RevenueCat API key to .env
+4. Test payment flow with sandbox account
+5. Submit to App Store
+6. Share with users!
 
 ## 📝 Changes from Original Template
 
 **Removed:**
 - ❌ Photo upload/attachments
 - ❌ Story export (PDF/Image)
-- ❌ RevenueCat integration requirement
 - ❌ Complex partner pairing system
 - ❌ Old hash-based code generation
+- ❌ Mock/demo payment system
 
 **Added:**
 - ✅ Proper story code system with database storage
@@ -283,9 +303,11 @@ All features implemented and ready for:
 - ✅ Interactive welcome tutorial
 - ✅ First-time user onboarding
 - ✅ Streak tracking system
-- ✅ Local premium mode
+- ✅ **Real RevenueCat payment integration**
+- ✅ **react-native-purchases SDK**
+- ✅ **Monthly & annual subscription packages**
+- ✅ **Restore purchases functionality**
 - ✅ Simplified database migration
-- ✅ Premium toggle in Settings
 - ✅ session_code column in database
 
 ---

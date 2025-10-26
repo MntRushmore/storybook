@@ -10,6 +10,7 @@ import { LoginScreen } from "./src/screens/LoginScreen";
 import { SignUpScreen } from "./src/screens/SignUpScreen";
 import { WelcomeModal } from "./src/components/WelcomeModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { initializeRevenueCat } from "./src/services/revenueCat";
 
 /*
 IMPORTANT NOTICE: DO NOT REMOVE
@@ -45,6 +46,13 @@ export default function App() {
   useEffect(() => {
     initialize();
   }, []);
+
+  // Initialize RevenueCat when user is authenticated
+  useEffect(() => {
+    if (user) {
+      initializeRevenueCat(user.id);
+    }
+  }, [user]);
 
   useEffect(() => {
     // Load stories from Supabase when user is authenticated

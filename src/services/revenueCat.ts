@@ -1,20 +1,48 @@
 /**
- * RevenueCat Integration Service
- *
- * SETUP INSTRUCTIONS:
- * 1. Go to Vibecode app API tab
- * 2. Add RevenueCat integration
- * 3. Get your API key from RevenueCat dashboard
- * 4. The Vibecode system will handle the rest
- *
- * For now, this uses a mock/local implementation until RevenueCat is configured
+ * RevenueCat Integration Service - PRODUCTION
+ * Real implementation using react-native-purchases SDK
  */
 
+import Purchases, { LOG_LEVEL, PurchasesPackage } from "react-native-purchases";
+import { Platform } from "react-native";
+import Constants from "expo-constants";
 import { useAuthStore } from "../state/authStore";
 import { updatePremiumStatus } from "./profileService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const PREMIUM_KEY = "@wordchain_premium_status";
+const REVENUE_CAT_API_KEY = Constants.expoConfig?.extra?.revenueCatApiKey || process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || "";
+const ENTITLEMENT_ID = "premium";
+
+let isInitialized = false;
+
+/**
+ * Initialize RevenueCat SDK
+ * Call this once when the app starts
+ */
+export async function initializeRevenueCat(userId?: string) {
+  if (isInitialized) return;
+
+  try {
+    if (!REVENUE_CAT_API_KEY) {
+      console.warn("⚠️ RevenueCat API key not found");
+      return;
+    }
+
+    Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
+
+    await Purchases.configure({
+      apiKey: REVENUE_CAT_API_KEY,
+      appUserID: userId,
+    });
+
+    isInitialized = true;
+    console.log("✅ RevenueCat initialized");
+
+    // Check initial premium status
+    await checkPremiumStatus();
+  } catch (error) {
+    console.error("❌ RevenueCat initialization error:", error);
+  }
+}
 
 export interface PurchaseResult {
   success: boolean;
@@ -27,13 +55,21 @@ export interface PurchaseResult {
  */
 export async function checkPremiumStatus(): Promise<boolean> {
   try {
-    // TODO: Replace with actual RevenueCat SDK call when integrated
-    // const customerInfo = await Purchases.getCustomerInfo();
-    // return customerInfo.entitlements.active["premium"] !== undefined;
+    if (!isInitialized) {
+      console.warn("RevenueCat not initialized");
+      return false;
+    }
 
-    // Mock implementation - checks local storage
-    const status = await AsyncStorage.getItem(PREMIUM_KEY);
-    return status === "true";
+    const customerInfo = await Purchases.getCustomerInfo();
+    const isPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
+
+    // Update user profile in Supabase
+    const user = useAuthStore.getState().user;
+    if (user) {
+      await updatePremiumStatus(user.id, isPremium);
+    }
+
+    return isPremium;
   } catch (error) {
     console.error("Error checking premium status:", error);
     return false;
@@ -41,28 +77,57 @@ export async function checkPremiumStatus(): Promise<boolean> {
 }
 
 /**
- * Purchase premium subscription
+ * Purchase a specific package
  */
-export async function purchasePremium(): Promise<PurchaseResult> {
+export async function purchasePremium(packageIdentifier?: string): Promise<PurchaseResult> {
   try {
-    // TODO: Replace with actual RevenueCat purchase flow
-    // const purchaseResult = await Purchases.purchasePackage(package);
-    // const isPremium = purchaseResult.customerInfo.entitlements.active["premium"] !== undefined;
+    if (!isInitialized) {
+      return {
+        success: false,
+        isPremium: false,
+        error: "RevenueCat not initialized",
+      };
+    }
 
-    // Mock implementation - simulates purchase
-    await AsyncStorage.setItem(PREMIUM_KEY, "true");
+    const offerings = await Purchases.getOfferings();
+
+    if (!offerings.current?.availablePackages.length) {
+      return {
+        success: false,
+        isPremium: false,
+        error: "No packages available",
+      };
+    }
+
+    // Find the requested package or default to annual
+    let packageToPurchase = offerings.current.availablePackages.find(
+      (pkg: PurchasesPackage) => pkg.identifier === (packageIdentifier || "$rc_annual")
+    );
+
+    // If not found, use the first available package
+    if (!packageToPurchase) {
+      packageToPurchase = offerings.current.availablePackages[0];
+    }
+
+    console.log("Purchasing package:", packageToPurchase.identifier);
+
+    const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
+    const isPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
 
     // Update user profile in Supabase
     const user = useAuthStore.getState().user;
-    if (user) {
+    if (user && isPremium) {
       await updatePremiumStatus(user.id, true);
     }
 
-    return {
-      success: true,
-      isPremium: true,
-    };
+    return { success: true, isPremium };
   } catch (error: any) {
+    console.error("Purchase error:", error);
+
+    if (error.userCancelled) {
+      return { success: false, isPremium: false, error: "Purchase cancelled" };
+    }
+
     return {
       success: false,
       isPremium: false,
@@ -76,12 +141,16 @@ export async function purchasePremium(): Promise<PurchaseResult> {
  */
 export async function restorePurchases(): Promise<PurchaseResult> {
   try {
-    // TODO: Replace with actual RevenueCat restore
-    // const customerInfo = await Purchases.restorePurchases();
-    // const isPremium = customerInfo.entitlements.active["premium"] !== undefined;
+    if (!isInitialized) {
+      return {
+        success: false,
+        isPremium: false,
+        error: "RevenueCat not initialized",
+      };
+    }
 
-    const status = await AsyncStorage.getItem(PREMIUM_KEY);
-    const isPremium = status === "true";
+    const customerInfo = await Purchases.restorePurchases();
+    const isPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
 
     if (isPremium) {
       const user = useAuthStore.getState().user;
@@ -93,8 +162,10 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     return {
       success: true,
       isPremium,
+      error: isPremium ? undefined : "No purchases found to restore",
     };
   } catch (error: any) {
+    console.error("Restore error:", error);
     return {
       success: false,
       isPremium: false,
@@ -104,35 +175,32 @@ export async function restorePurchases(): Promise<PurchaseResult> {
 }
 
 /**
- * Get available subscription packages
+ * Get available subscription packages from RevenueCat
  */
 export async function getSubscriptionPackages() {
   try {
-    // TODO: Replace with actual RevenueCat offerings
-    // const offerings = await Purchases.getOfferings();
-    // return offerings.current?.availablePackages || [];
+    if (!isInitialized) {
+      console.warn("RevenueCat not initialized, returning empty packages");
+      return [];
+    }
 
-    // Mock packages
-    return [
-      {
-        identifier: "monthly",
-        product: {
-          title: "Premium Monthly",
-          description: "All features unlocked",
-          priceString: "$4.99",
-          price: 4.99,
-        },
+    const offerings = await Purchases.getOfferings();
+
+    if (!offerings.current?.availablePackages.length) {
+      console.warn("No packages available in current offering");
+      return [];
+    }
+
+    return offerings.current.availablePackages.map((pkg: PurchasesPackage) => ({
+      identifier: pkg.identifier,
+      product: {
+        title: pkg.product.title,
+        description: pkg.product.description,
+        priceString: pkg.product.priceString,
+        price: pkg.product.price,
       },
-      {
-        identifier: "yearly",
-        product: {
-          title: "Premium Yearly",
-          description: "Save 40% with annual billing",
-          priceString: "$29.99",
-          price: 29.99,
-        },
-      },
-    ];
+      packageType: pkg.packageType,
+    }));
   } catch (error) {
     console.error("Error fetching packages:", error);
     return [];
@@ -157,7 +225,7 @@ export function requiresPremium(feature: string): boolean {
 }
 
 /**
- * Show paywall modal
+ * Show paywall modal if needed
  * Returns true if user should proceed (already premium or purchased)
  */
 export async function showPaywallIfNeeded(feature: string): Promise<boolean> {
@@ -167,4 +235,11 @@ export async function showPaywallIfNeeded(feature: string): Promise<boolean> {
 
   const isPremium = await checkPremiumStatus();
   return isPremium;
+}
+
+/**
+ * Check if RevenueCat is initialized
+ */
+export function isRevenueCatInitialized(): boolean {
+  return isInitialized;
 }

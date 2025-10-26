@@ -31,16 +31,28 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
   const loadPackages = async () => {
     const pkgs = await getSubscriptionPackages();
     setPackages(pkgs);
+    // Set default selection to annual if available
+    if (pkgs.length > 0) {
+      const annualPkg = pkgs.find(p => p.identifier === "$rc_annual");
+      if (annualPkg) {
+        setSelectedPackage("$rc_annual");
+      } else {
+        setSelectedPackage(pkgs[0].identifier);
+      }
+    }
   };
 
   const handlePurchase = async () => {
     setLoading(true);
-    const result = await purchasePremium();
+    const result = await purchasePremium(selectedPackage);
     setLoading(false);
 
     if (result.success) {
       onPurchaseSuccess?.();
       onClose();
+    } else if (result.error && result.error !== "Purchase cancelled") {
+      // Show error to user (you could add an Alert or error state here)
+      console.error("Purchase failed:", result.error);
     }
   };
 
@@ -52,6 +64,9 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
     if (result.success && result.isPremium) {
       onPurchaseSuccess?.();
       onClose();
+    } else if (result.error) {
+      // Show error or "no purchases found" message
+      console.log("Restore result:", result.error);
     }
   };
 
