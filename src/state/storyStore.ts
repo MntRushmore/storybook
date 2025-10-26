@@ -381,43 +381,69 @@ export const useStoryStore = create<StoryState>()(
           // Trim and validate code
           const trimmedCode = code.trim();
 
+          console.log("==== JOIN WITH CODE DEBUG ====");
           console.log("Attempting to join with code:", trimmedCode);
+          console.log("Code length:", trimmedCode.length);
+          console.log("Code type:", typeof trimmedCode);
+          console.log("Current user ID:", user.id);
 
-          // Find story with matching session_code
+          // First, let's check if the column exists by trying to select it
+          const { data: testQuery, error: testError } = await supabase
+            .from("stories")
+            .select("id, session_code, creator_id, partner_id")
+            .not("session_code", "is", null)
+            .limit(5);
+
+          console.log("Test query (all stories with codes):", testQuery);
+          console.log("Test query error:", testError);
+
+          // Now try the actual search
           const { data: stories, error: searchError } = await supabase
             .from("stories")
             .select("*")
-            .eq("session_code", trimmedCode)
-            .limit(1);
+            .eq("session_code", trimmedCode);
 
-          console.log("Search result:", { stories, error: searchError });
+          console.log("Search result - stories:", stories);
+          console.log("Search result - error:", searchError);
+          console.log("Search result - count:", stories?.length || 0);
 
           if (searchError) {
-            console.error("Search error:", searchError);
-            set({ isLoading: false, error: "Database error. Please try again." });
-            return { success: false, error: "Database error. Please try again." };
+            console.error("Search error details:", JSON.stringify(searchError));
+            set({ isLoading: false, error: `Database error: ${searchError.message}` });
+            return { success: false, error: `Database error: ${searchError.message}` };
           }
 
           if (!stories || stories.length === 0) {
-            console.log("No story found with code:", trimmedCode);
+            console.log("❌ No story found with code:", trimmedCode);
+            console.log("Available codes:", testQuery?.map(s => s.session_code));
             set({ isLoading: false, error: "Invalid or expired code" });
             return { success: false, error: "Invalid or expired code" };
           }
 
           const story = stories[0];
-          console.log("Found story:", story.id, "Code:", story.session_code);
+          console.log("✅ Found story:", {
+            id: story.id,
+            session_code: story.session_code,
+            creator_id: story.creator_id,
+            partner_id: story.partner_id,
+            title: story.title
+          });
 
           // Check if user is trying to join their own story
           if (story.creator_id === user.id) {
+            console.log("❌ User trying to join own story");
             set({ isLoading: false, error: "You cannot join your own story" });
             return { success: false, error: "You cannot join your own story" };
           }
 
           // Check if story already has a partner
           if (story.partner_id && story.partner_id !== user.id) {
+            console.log("❌ Story already has a partner:", story.partner_id);
             set({ isLoading: false, error: "This story already has a partner" });
             return { success: false, error: "This story already has a partner" };
           }
+
+          console.log("✅ All checks passed, adding user as partner");
 
           // Add user as partner if not already
           if (story.partner_id !== user.id) {
