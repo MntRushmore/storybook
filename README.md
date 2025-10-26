@@ -1,4 +1,4 @@
-# WordChain Premium - The Ultimate Storytelling App ✨
+# Dear We - The Ultimate Storytelling App ✨
 
 A beautiful storytelling app where you can write stories with anyone, one word at a time - now with **premium features, themes, voice input, streaks, and easy story sharing**!
 
@@ -314,5 +314,5 @@ All features implemented and ready for:
 
 **Built with ❤️ • Cloud-synced! • Streak Tracking! • Easy Sharing! • Beautiful Design!**
 
-WordChain - Create memories together, one word at a time ✨
+Dear We - Create memories together, one word at a time ✨
 

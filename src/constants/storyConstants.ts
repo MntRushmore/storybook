@@ -53,7 +53,7 @@ export const MODES: Record<StoryMode, { words: number; description: string; icon
   },
   standard: {
     words: 75,
-    description: "Classic WordChain experience",
+    description: "Classic Dear We experience",
     icon: "📖"
   },
   epic: {
