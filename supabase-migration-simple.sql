@@ -38,6 +38,22 @@ ALTER TABLE user_stats ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all operations on user_stats" ON user_stats;
 CREATE POLICY "Allow all operations on user_stats" ON user_stats FOR ALL USING (true) WITH CHECK (true);
 
+-- Add RLS policy for stories to allow searching by session_code
+-- This allows users to find stories by code even if they didn't create them
+DROP POLICY IF EXISTS "Allow finding stories by session code" ON stories;
+CREATE POLICY "Allow finding stories by session code"
+ON stories
+FOR SELECT
+USING (session_code IS NOT NULL);
+
+-- Allow users to update stories they want to join (to add themselves as partner)
+DROP POLICY IF EXISTS "Allow joining stories via code" ON stories;
+CREATE POLICY "Allow joining stories via code"
+ON stories
+FOR UPDATE
+USING (session_code IS NOT NULL AND partner_id IS NULL)
+WITH CHECK (session_code IS NOT NULL);
+
 -- Try to enable realtime for user_stats (may fail without permissions, but app will still work)
 -- If this fails, the app will still function but without real-time updates for stats
 DO $$
