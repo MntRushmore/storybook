@@ -19,11 +19,18 @@ let isInitialized = false;
  * Call this once when the app starts
  */
 export async function initializeRevenueCat(userId?: string) {
-  if (isInitialized) return;
+  if (isInitialized) {
+    console.log("⚠️ RevenueCat already initialized");
+    return;
+  }
 
   try {
+    console.log("🔄 Initializing RevenueCat...");
+    console.log("API Key present:", !!REVENUE_CAT_API_KEY);
+    console.log("User ID:", userId);
+
     if (!REVENUE_CAT_API_KEY) {
-      console.warn("⚠️ RevenueCat API key not found");
+      console.error("⚠️ RevenueCat API key not found");
       return;
     }
 
@@ -35,7 +42,7 @@ export async function initializeRevenueCat(userId?: string) {
     });
 
     isInitialized = true;
-    console.log("✅ RevenueCat initialized");
+    console.log("✅ RevenueCat initialized successfully");
 
     // Check initial premium status
     await checkPremiumStatus();
@@ -179,30 +186,42 @@ export async function restorePurchases(): Promise<PurchaseResult> {
  */
 export async function getSubscriptionPackages() {
   try {
+    console.log("📦 Fetching subscription packages...");
+    console.log("Is initialized:", isInitialized);
+
     if (!isInitialized) {
-      console.warn("RevenueCat not initialized, returning empty packages");
+      console.error("❌ RevenueCat not initialized");
       return [];
     }
 
     const offerings = await Purchases.getOfferings();
+    console.log("Offerings fetched:", !!offerings);
+    console.log("Current offering:", !!offerings.current);
+    console.log("Available packages count:", offerings.current?.availablePackages.length || 0);
 
     if (!offerings.current?.availablePackages.length) {
-      console.warn("No packages available in current offering");
+      console.warn("⚠️ No packages available in current offering");
       return [];
     }
 
-    return offerings.current.availablePackages.map((pkg: PurchasesPackage) => ({
-      identifier: pkg.identifier,
-      product: {
-        title: pkg.product.title,
-        description: pkg.product.description,
-        priceString: pkg.product.priceString,
-        price: pkg.product.price,
-      },
-      packageType: pkg.packageType,
-    }));
+    const packages = offerings.current.availablePackages.map((pkg: PurchasesPackage) => {
+      console.log("Package:", pkg.identifier, pkg.product.title, pkg.product.priceString);
+      return {
+        identifier: pkg.identifier,
+        product: {
+          title: pkg.product.title,
+          description: pkg.product.description,
+          priceString: pkg.product.priceString,
+          price: pkg.product.price,
+        },
+        packageType: pkg.packageType,
+      };
+    });
+
+    console.log("✅ Returning", packages.length, "packages");
+    return packages;
   } catch (error) {
-    console.error("Error fetching packages:", error);
+    console.error("❌ Error fetching packages:", error);
     return [];
   }
 }
