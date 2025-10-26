@@ -86,9 +86,25 @@ A beautiful storytelling app where you can write stories with anyone, one word a
 
 ## 🛠 Setup Instructions
 
-### 1. Run Database Migration
+### 1. Run Database Migrations
 
-The app requires the session_code column for story codes to work. **Choose the migration that works for you:**
+The app requires additional database columns for story codes and Branch Mode to work. **Run these migrations in order:**
+
+#### Step 1: Branch Mode Migration (NEW - Required for Branch Mode)
+1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
+2. Copy and paste the SQL from `supabase-branch-mode-migration.sql`
+3. Click "Run"
+
+This migration adds:
+- `collaboration_type` column (classic or branch)
+- `parent_prompt_id` column (links branch stories)
+- `branch_author_id` column (identifies branch author)
+- Indexes for better query performance
+- Constraints for data validation
+
+**IMPORTANT**: This migration is required for Branch Mode to work!
+
+#### Step 2: Base Migration (Choose one option)
 
 #### Option A: Simple Migration (Recommended - No Root Access Needed)
 1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
