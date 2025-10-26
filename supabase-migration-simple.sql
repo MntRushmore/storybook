@@ -55,6 +55,32 @@ FOR UPDATE
 USING (session_code IS NOT NULL AND partner_id IS NULL)
 WITH CHECK (session_code IS NOT NULL);
 
+-- Add RLS policy for story_entries to allow both creator and partner to add words
+DROP POLICY IF EXISTS "Allow story participants to add entries" ON story_entries;
+CREATE POLICY "Allow story participants to add entries"
+ON story_entries
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM stories
+    WHERE stories.id = story_entries.story_id
+    AND (stories.creator_id = auth.uid()::text OR stories.partner_id = auth.uid()::text)
+  )
+);
+
+-- Allow story participants to read entries
+DROP POLICY IF EXISTS "Allow story participants to read entries" ON story_entries;
+CREATE POLICY "Allow story participants to read entries"
+ON story_entries
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM stories
+    WHERE stories.id = story_entries.story_id
+    AND (stories.creator_id = auth.uid()::text OR stories.partner_id = auth.uid()::text)
+  )
+);
+
 -- Try to enable realtime for user_stats (may fail without permissions, but app will still work)
 -- If this fails, the app will still function but without real-time updates for stats
 DO $$
