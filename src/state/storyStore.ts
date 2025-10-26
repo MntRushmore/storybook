@@ -79,6 +79,32 @@ export const useStoryStore = create<StoryState>()(
           else if (mode === "epic") maxWords = 150;
           else if (mode === "sentence") maxWords = 20;
 
+          // Generate a unique 6-digit session code
+          let sessionCode = "";
+          let isUnique = false;
+          let attempts = 0;
+          const maxAttempts = 10;
+
+          while (!isUnique && attempts < maxAttempts) {
+            sessionCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+            // Check if code already exists
+            const { data: existing } = await supabase
+              .from("stories")
+              .select("id")
+              .eq("session_code", sessionCode)
+              .limit(1);
+
+            if (!existing || existing.length === 0) {
+              isUnique = true;
+            }
+            attempts++;
+          }
+
+          if (!isUnique) {
+            throw new Error("Failed to generate unique story code");
+          }
+
           // Create story in database
           const { data: story, error: createError } = await supabase
             .from("stories")
@@ -92,6 +118,7 @@ export const useStoryStore = create<StoryState>()(
               theme,
               mode,
               is_premium: mode === "epic" || mode === "sentence",
+              session_code: sessionCode,
             })
             .select()
             .single();

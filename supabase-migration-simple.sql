@@ -8,6 +8,7 @@ ALTER TABLE stories ADD COLUMN IF NOT EXISTS mode TEXT DEFAULT 'standard';
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS reactions JSONB DEFAULT '{}';
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE;
+ALTER TABLE stories ADD COLUMN IF NOT EXISTS session_code TEXT;
 
 -- Add audio column to story_entries (if it doesn't exist)
 ALTER TABLE story_entries ADD COLUMN IF NOT EXISTS audio_url TEXT;
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS user_stats (
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_stories_theme ON stories(theme);
 CREATE INDEX IF NOT EXISTS idx_stories_tags ON stories USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_stories_session_code ON stories(session_code);
 CREATE INDEX IF NOT EXISTS idx_user_stats_user_id ON user_stats(user_id);
 
 -- Enable Row Level Security (RLS) on user_stats

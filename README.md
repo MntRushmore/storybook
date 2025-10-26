@@ -11,9 +11,11 @@ A beautiful storytelling app where you can write stories with anyone, one word a
 - **Skip Option**: Jump straight to the app if you prefer
 
 ### 📲 Story Code Sharing
+- **Automatic Code Generation**: Every story gets a unique 6-digit code
+- **Share Modal on Creation**: Code displays in a beautiful modal when you create a story
 - **Share via Text/SMS**: Easily share story codes through any messaging app
-- **6-Digit Join Codes**: Simple codes to join any story
 - **One-Tap Sharing**: Share button built into story screen
+- **Database Storage**: Codes are permanently stored and validated
 - **No Partner Setup Required**: Anyone with the code can join your story
 
 ### ✨ Premium Subscription (Local Mode)
@@ -77,7 +79,7 @@ A beautiful storytelling app where you can write stories with anyone, one word a
 
 ### 1. Run Database Migration
 
-The app requires new database tables. **Choose the migration that works for you:**
+The app requires the session_code column for story codes to work. **Choose the migration that works for you:**
 
 #### Option A: Simple Migration (Recommended - No Root Access Needed)
 1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
@@ -85,10 +87,12 @@ The app requires new database tables. **Choose the migration that works for you:
 3. Click "Run"
 
 This migration:
-- Adds new columns to existing tables
+- Adds new columns to existing tables (including session_code)
 - Creates user_stats table for streaks
 - Works without special permissions
 - Safe to run multiple times
+
+**IMPORTANT**: The session_code column is required for story codes to work!
 
 #### Option B: Full Migration (If You Have Admin Access)
 1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
@@ -121,13 +125,21 @@ To activate premium:
 1. Tap "New Story" on home
 2. Choose a theme and mode
 3. Select a template or create custom prompt
-4. Start writing!
+4. Story code appears in a modal - share it with your partner!
+5. Start writing!
 
 ### Share Your Story
+**Option 1: Share when creating**
+1. Create a new story
+2. Story code modal appears automatically
+3. Tap "Share Code" to send via text/SMS/messaging app
+
+**Option 2: Share from story screen**
 1. Open any story
 2. Tap the share button in the header
 3. Send the 6-digit code via text, SMS, or any messaging app
-4. Anyone with the code can join and write with you!
+
+**Note:** Story codes are shown in a box on the story detail screen until a partner joins!
 
 ### Join a Story
 1. Tap "Join" on home screen
@@ -160,8 +172,10 @@ To activate premium:
 **Core Features:**
 - Turn-based word writing
 - Real-time cloud sync (Supabase)
+- Automatic unique 6-digit story codes
+- Story code modal on creation
 - Story code sharing via SMS/text
-- Simple 6-digit join codes
+- Simple join flow with validation
 - Progress tracking
 - Story reveal animations
 
@@ -258,9 +272,13 @@ All features implemented and ready for:
 - ❌ Story export (PDF/Image)
 - ❌ RevenueCat integration requirement
 - ❌ Complex partner pairing system
+- ❌ Old hash-based code generation
 
 **Added:**
-- ✅ Simple story code sharing
+- ✅ Proper story code system with database storage
+- ✅ Story code modal on creation
+- ✅ Unique code generation with validation
+- ✅ Share code button in modal
 - ✅ Share via SMS/text functionality
 - ✅ Interactive welcome tutorial
 - ✅ First-time user onboarding
@@ -268,7 +286,7 @@ All features implemented and ready for:
 - ✅ Local premium mode
 - ✅ Simplified database migration
 - ✅ Premium toggle in Settings
-- ✅ One-tap story code generation
+- ✅ session_code column in database
 
 ---
 
