@@ -10,6 +10,7 @@ import { JoinSessionScreen } from "../screens/JoinSessionScreen";
 import { MemoriesScreen } from "../screens/MemoriesScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { TemplateSelectionScreen } from "../screens/TemplateSelectionScreen";
+import { BranchComparisonScreen } from "../screens/BranchComparisonScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
@@ -79,6 +80,7 @@ export function RootNavigator() {
       />
       <Stack.Screen name="JoinSession" component={JoinSessionScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="BranchComparison" component={BranchComparisonScreen} />
     </Stack.Navigator>
   );
 }

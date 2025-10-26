@@ -1,8 +1,16 @@
 # Dear We - The Ultimate Storytelling App ✨
 
-A beautiful storytelling app where you can write stories with anyone, one word at a time - now with **premium features, themes, voice input, streaks, and easy story sharing**!
+A beautiful storytelling app where you can write stories with anyone, one word at a time - now with **Branch Mode, premium features, themes, voice input, streaks, and easy story sharing**!
 
 ## 🎉 Latest Features!
+
+### 🌿 Branch Mode Storytelling (NEW!)
+- **Parallel Stories**: Write your own version while your partner writes theirs
+- **Same Prompt, Different Paths**: Start from the same beginning, create unique endings
+- **Side-by-Side Comparison**: View both versions together or toggle between them
+- **Merge Branches**: Combine elements from both stories into a new collaborative story
+- **Beautiful Branch Cards**: Visual indicators show completion status for each version
+- **Independent Writing**: No turn-taking - both partners write at their own pace
 
 ### 🎓 Welcome Tutorial (NEW!)
 - **Interactive Onboarding**: Beautiful 5-step tutorial for new users
@@ -139,11 +147,23 @@ This includes everything in Option A plus:
 ## 🎮 How to Use
 
 ### Start a New Story
+
+**Classic Mode (Turn-Based):**
 1. Tap "New Story" on home
 2. Choose a theme and mode
 3. Select a template or create custom prompt
-4. Story code appears in a modal - share it with your partner!
-5. Start writing!
+4. Choose "Classic Mode" when prompted
+5. Story code appears in a modal - share it with your partner!
+6. Take turns adding words
+
+**Branch Mode (Parallel Writing):**
+1. Tap "New Story" on home
+2. Choose a theme and mode
+3. Select a template or create custom prompt
+4. Choose "Branch Mode" when prompted
+5. Both you and your partner get separate story branches
+6. Write independently at your own pace
+7. When both finish, compare versions in Memories!
 
 ### Share Your Story
 **Option 1: Share when creating**
@@ -176,10 +196,19 @@ This includes everything in Option A plus:
 - Premium users get advanced stats
 
 ### Take Turns
+
+**Classic Mode:**
 - Write one word (or sentence in Sentence mode)
 - See last 3 words for context
 - Wait for partner's turn
 - Story completes at word limit
+
+**Branch Mode:**
+- Write at your own pace - no turn-taking
+- Both partners write simultaneously
+- Each creates their own complete story
+- Compare versions when both finish
+- Option to merge branches into new story
 
 ### Add Voice (Premium)
 - Tap microphone icon to record word
@@ -189,7 +218,8 @@ This includes everything in Option A plus:
 ## ✨ Complete Feature List
 
 **Core Features:**
-- Turn-based word writing
+- Turn-based word writing (Classic Mode)
+- Parallel storytelling (Branch Mode)
 - Real-time cloud sync (Supabase)
 - Automatic unique 6-digit story codes
 - Story code modal on creation
@@ -197,6 +227,9 @@ This includes everything in Option A plus:
 - Simple join flow with validation
 - Progress tracking
 - Story reveal animations
+- Branch comparison view
+- Side-by-side and toggle viewing modes
+- Merge branches functionality
 
 **Premium Features:**
 - 8 themed story modes
@@ -207,6 +240,7 @@ This includes everything in Option A plus:
 - Partner reactions
 - Tags & collections
 - Premium paywall
+- Branch Mode (parallel writing)
 
 ## 🛠 Tech Stack
 
@@ -224,15 +258,18 @@ This includes everything in Option A plus:
 
 ### Screens
 - **HomeScreen**: Story list with streak display and daily prompt
-- **TemplateSelectionScreen**: Theme/mode picker with templates
-- **StoryDetailScreen**: Writing interface with voice input and share button
+- **TemplateSelectionScreen**: Theme/mode picker with templates + Branch Mode selection
+- **StoryDetailScreen**: Writing interface with voice input, share button, and Branch Mode indicator
 - **StoryRevealScreen**: Animated story completion
-- **MemoriesScreen**: Finished stories with reactions
+- **MemoriesScreen**: Finished stories with reactions + Branch story cards
+- **BranchComparisonScreen**: Side-by-side branch viewing with merge functionality
 - **JoinSessionScreen**: Simple story code entry
 - **SettingsScreen**: Profile and premium management
 
 ### New Components
 - **PaywallModal**: Beautiful subscription UI with real RevenueCat payments
+- **BranchModeSelectionModal**: Choose Classic vs Branch Mode when creating stories
+- **BranchStoryCard**: Display linked branch stories in Memories
 - **StreakDisplay**: Daily streak visualization
 - **TemplateCard**: Theme-styled template display
 - **VoiceRecorder**: Audio recording interface
@@ -241,10 +278,11 @@ This includes everything in Option A plus:
 ### Services
 - **revenueCat.ts**: Premium management with RevenueCat SDK
 - **streakStore.ts**: Streak tracking state
+- **storyStore.ts**: Enhanced with Branch Mode methods (createBranchStory, getBranchStories, mergeBranches)
 - **storyConstants.ts**: Themes, templates, modes
 
 ### Database Schema
-- **stories**: Enhanced with theme, mode, tags, reactions
+- **stories**: Enhanced with theme, mode, tags, reactions, collaboration_type, parent_prompt_id, branch_author_id
 - **story_entries**: Enhanced with audio_url
 - **user_stats**: New table for streak tracking
 
@@ -295,6 +333,13 @@ All features implemented and ready for:
 - ❌ Mock/demo payment system
 
 **Added:**
+- ✅ Branch Mode (parallel storytelling)
+- ✅ Branch comparison screen
+- ✅ Side-by-side and toggle view modes
+- ✅ Merge branches functionality
+- ✅ Branch story cards in Memories
+- ✅ Mode selection modal
+- ✅ Enhanced story types for branching
 - ✅ Proper story code system with database storage
 - ✅ Story code modal on creation
 - ✅ Unique code generation with validation

@@ -10,18 +10,23 @@ import { StoryTheme, StoryMode } from "../types/story";
 import { useStoryStore } from "../state/storyStore";
 import { useAuthStore } from "../state/authStore";
 import { PaywallModal } from "../components/PaywallModal";
+import { BranchModeSelectionModal } from "../components/BranchModeSelectionModal";
 import { checkPremiumStatus } from "../services/revenueCat";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TemplateSelection">;
 
 export function TemplateSelectionScreen({ navigation }: Props) {
   const createStory = useStoryStore(s => s.createStory);
+  const createBranchStory = useStoryStore(s => s.createBranchStory);
   const user = useAuthStore(s => s.user);
 
   const [selectedTheme, setSelectedTheme] = useState<StoryTheme | "all">("all");
   const [selectedMode, setSelectedMode] = useState<StoryMode>("standard");
   const [customTitle, setCustomTitle] = useState("");
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showBranchModal, setShowBranchModal] = useState(false);
+  const [pendingPrompt, setPendingPrompt] = useState("");
+  const [pendingTheme, setPendingTheme] = useState<StoryTheme>("romance");
   const [isPremium, setIsPremium] = useState(false);
 
   React.useEffect(() => {
@@ -38,23 +43,39 @@ export function TemplateSelectionScreen({ navigation }: Props) {
       return;
     }
 
+    // Show branch mode selection modal
+    setPendingPrompt(prompt);
+    setPendingTheme(theme);
+    setShowBranchModal(true);
+  };
+
+  const handleClassicMode = async () => {
+    setShowBranchModal(false);
     try {
-      const storyId = await createStory(prompt, prompt);
+      const storyId = await createStory(pendingPrompt, pendingPrompt, pendingTheme, selectedMode);
       navigation.replace("StoryDetail", { storyId });
     } catch (error) {
-      console.error("Error creating story:", error);
+      console.error("Error creating classic story:", error);
+    }
+  };
+
+  const handleBranchMode = async () => {
+    setShowBranchModal(false);
+    try {
+      const { creatorBranchId } = await createBranchStory(pendingPrompt, pendingTheme, selectedMode);
+      navigation.replace("StoryDetail", { storyId: creatorBranchId });
+    } catch (error) {
+      console.error("Error creating branch story:", error);
     }
   };
 
   const handleCustomCreate = async () => {
     if (!customTitle.trim()) return;
 
-    try {
-      const storyId = await createStory(customTitle, customTitle);
-      navigation.replace("StoryDetail", { storyId });
-    } catch (error) {
-      console.error("Error creating story:", error);
-    }
+    // Show branch mode selection modal
+    setPendingPrompt(customTitle);
+    setPendingTheme(selectedTheme === "all" ? "romance" : selectedTheme);
+    setShowBranchModal(true);
   };
 
   return (
@@ -262,6 +283,13 @@ export function TemplateSelectionScreen({ navigation }: Props) {
           setIsPremium(true);
           setShowPaywall(false);
         }}
+      />
+
+      <BranchModeSelectionModal
+        visible={showBranchModal}
+        onClose={() => setShowBranchModal(false)}
+        onSelectClassic={handleClassicMode}
+        onSelectBranch={handleBranchMode}
       />
     </SafeAreaView>
   );

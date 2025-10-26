@@ -64,8 +64,11 @@ export function StoryDetailScreen({
     return null;
   }
 
+  const isBranchMode = story.collaborationType === "branch";
+
   // Compute these values from story directly (avoid Zustand selector functions)
-  const isMyTurn = story.currentTurnUserId === user.id;
+  // In branch mode, it's always the user's turn for their own branch
+  const isMyTurn = isBranchMode ? story.branchAuthorId === user.id : story.currentTurnUserId === user.id;
   const lastThreeWords = story.entries.slice(-3).map(e => e.word);
 
   const handleAddWord = async () => {
@@ -173,6 +176,19 @@ export function StoryDetailScreen({
       </View>
 
       <ScrollView className="flex-1 px-6 pt-6 pb-4">
+        {/* Branch Mode Indicator */}
+        {isBranchMode && (
+          <View className="bg-[#85B79D] rounded-2xl p-4 mb-4">
+            <View className="flex-row items-center justify-center mb-2">
+              <Ionicons name="git-branch" size={20} color="white" />
+              <Text className="ml-2 font-bold text-white">Branch Mode</Text>
+            </View>
+            <Text className="text-white/90 text-xs text-center">
+              Writing your own version. Your partner is writing theirs separately!
+            </Text>
+          </View>
+        )}
+
         {/* Turn Indicator */}
         {!story.isFinished && (
           <View
@@ -191,7 +207,11 @@ export function StoryDetailScreen({
                   isMyTurn ? "text-white" : "text-[#A0886C]"
                 }`}
               >
-                {isMyTurn ? "Your turn to add a word!" : "Waiting for your partner..."}
+                {isBranchMode
+                  ? "Continue writing your version!"
+                  : isMyTurn
+                    ? "Your turn to add a word!"
+                    : "Waiting for your partner..."}
               </Text>
             </View>
           </View>

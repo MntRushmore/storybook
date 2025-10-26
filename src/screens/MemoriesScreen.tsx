@@ -2,10 +2,13 @@ import React, { useMemo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
+import { useAuthStore } from "../state/authStore";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
+import { BranchStoryCard } from "../components/BranchStoryCard";
+import { Story } from "../types/story";
 
 type MemoriesScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Memories">;
@@ -14,7 +17,29 @@ type MemoriesScreenProps = {
 export function MemoriesScreen({ navigation }: MemoriesScreenProps) {
   const insets = useSafeAreaInsets();
   const stories = useStoryStore(s => s.stories);
-  const finishedStories = useMemo(() => stories.filter(s => s.isFinished), [stories]);
+  const user = useAuthStore(s => s.user);
+
+  const { classicStories, branchGroups } = useMemo(() => {
+    const finished = stories.filter(s => s.isFinished);
+    const classic: Story[] = [];
+    const branchMap = new Map<string, Story[]>();
+
+    finished.forEach(story => {
+      if (story.collaborationType === "branch" && story.parentPromptId) {
+        if (!branchMap.has(story.parentPromptId)) {
+          branchMap.set(story.parentPromptId, []);
+        }
+        branchMap.get(story.parentPromptId)!.push(story);
+      } else {
+        classic.push(story);
+      }
+    });
+
+    return {
+      classicStories: classic,
+      branchGroups: Array.from(branchMap.entries()),
+    };
+  }, [stories]);
 
   return (
     <View className="flex-1 bg-[#FFF8F0]">
@@ -27,8 +52,8 @@ export function MemoriesScreen({ navigation }: MemoriesScreenProps) {
           <View>
             <Text className="text-white text-2xl font-semibold">Memories</Text>
             <Text className="text-[#F5E6D3] text-sm mt-1">
-              {finishedStories.length}{" "}
-              {finishedStories.length === 1 ? "story" : "stories"} saved
+              {classicStories.length + branchGroups.length}{" "}
+              {classicStories.length + branchGroups.length === 1 ? "story" : "stories"} saved
             </Text>
           </View>
           <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
@@ -38,7 +63,7 @@ export function MemoriesScreen({ navigation }: MemoriesScreenProps) {
       </View>
 
       <ScrollView className="flex-1 px-6 pt-6">
-        {finishedStories.length === 0 ? (
+        {classicStories.length === 0 && branchGroups.length === 0 ? (
           <View className="items-center justify-center py-20">
             <View className="mb-4">
               <Ionicons name="albums-outline" size={64} color="#C8B4A0" />
@@ -52,7 +77,18 @@ export function MemoriesScreen({ navigation }: MemoriesScreenProps) {
           </View>
         ) : (
           <View className="space-y-4 pb-6">
-            {finishedStories.map((story) => {
+            {/* Branch Story Groups */}
+            {branchGroups.map(([parentPromptId, branchStories]) => (
+              <BranchStoryCard
+                key={parentPromptId}
+                stories={branchStories}
+                currentUserId={user?.id || ""}
+                onPress={() => navigation.navigate("BranchComparison", { parentPromptId })}
+              />
+            ))}
+
+            {/* Classic Stories */}
+            {classicStories.map((story) => {
               const previewText = story.entries
                 .map(e => e.word)
                 .join(" ")

@@ -7,6 +7,7 @@ export interface User {
 
 export type StoryTheme = 'romance' | 'adventure' | 'comedy' | 'mystery' | 'fantasy' | 'scifi' | 'horror' | 'slice-of-life';
 export type StoryMode = 'quick' | 'standard' | 'epic' | 'sentence';
+export type StoryCollaborationType = 'classic' | 'branch';
 
 export interface StoryEntry {
   id: string;
@@ -33,6 +34,26 @@ export interface Story {
   theme: StoryTheme; // Story theme
   mode: StoryMode; // Story mode
   isPremium: boolean; // Premium features used
+  collaborationType: StoryCollaborationType; // Classic or Branch mode
+  parentPromptId?: string; // For branch mode: links to parent prompt
+  branchAuthorId?: string; // For branch mode: which partner wrote this branch
+}
+
+export interface BranchReaction {
+  id: string;
+  branchId: string;
+  userId: string;
+  emoji: string;
+  timestamp: number;
+}
+
+export interface BranchComment {
+  id: string;
+  branchId: string;
+  userId: string;
+  userName: string;
+  text: string;
+  timestamp: number;
 }
 
 export interface UserProfile {

@@ -6,4 +6,5 @@ export type RootStackParamList = {
   Memories: undefined;
   Settings: undefined;
   TemplateSelection: undefined;
+  BranchComparison: { parentPromptId: string };
 };

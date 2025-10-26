@@ -20,6 +20,11 @@ interface StoryState {
   deleteStory: (storyId: string) => Promise<void>;
   revealStory: (storyId: string) => void;
 
+  // Branch Mode actions
+  createBranchStory: (prompt: string, theme?: string, mode?: string) => Promise<{ parentPromptId: string; creatorBranchId: string; partnerBranchId: string }>;
+  getBranchStories: (parentPromptId: string) => Story[];
+  mergeBranches: (branch1Id: string, branch2Id: string) => Promise<string>;
+
   // Story code functions
   generateStoryCode: (storyId: string) => string;
   joinWithCode: (code: string) => Promise<{ success: boolean; storyId?: string; error?: string }>;
@@ -119,6 +124,7 @@ export const useStoryStore = create<StoryState>()(
               mode,
               is_premium: mode === "epic" || mode === "sentence",
               session_code: sessionCode,
+              collaboration_type: "classic",
             })
             .select()
             .single();
@@ -368,6 +374,173 @@ export const useStoryStore = create<StoryState>()(
           });
       },
 
+      // Branch Mode Methods
+      createBranchStory: async (prompt: string, theme = "romance", mode = "standard") => {
+        const user = useAuthStore.getState().user;
+        if (!user) throw new Error("User not authenticated");
+
+        const userProfile = user.user_metadata;
+        const partnerId = userProfile?.partner_id;
+
+        if (!partnerId) {
+          throw new Error("You need a partner to create branch stories");
+        }
+
+        set({ isLoading: true, error: null });
+
+        try {
+          // Determine max words based on mode
+          let maxWords = DEFAULT_MAX_WORDS;
+          if (mode === "quick") maxWords = 25;
+          else if (mode === "epic") maxWords = 150;
+          else if (mode === "sentence") maxWords = 20;
+
+          // Generate a unique parent prompt ID
+          const parentPromptId = `branch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+          // Create two separate stories - one for each partner
+          const creatorStory = {
+            title: prompt,
+            creator_id: user.id,
+            current_turn_user_id: user.id,
+            max_words: maxWords,
+            is_finished: false,
+            is_revealed: false,
+            theme,
+            mode,
+            is_premium: mode === "epic" || mode === "sentence",
+            collaboration_type: "branch",
+            parent_prompt_id: parentPromptId,
+            branch_author_id: user.id,
+            partner_id: partnerId,
+          };
+
+          const partnerStory = {
+            title: prompt,
+            creator_id: partnerId,
+            current_turn_user_id: partnerId,
+            max_words: maxWords,
+            is_finished: false,
+            is_revealed: false,
+            theme,
+            mode,
+            is_premium: mode === "epic" || mode === "sentence",
+            collaboration_type: "branch",
+            parent_prompt_id: parentPromptId,
+            branch_author_id: partnerId,
+            partner_id: user.id,
+          };
+
+          // Insert both stories
+          const { data: creatorData, error: creatorError } = await supabase
+            .from("stories")
+            .insert(creatorStory)
+            .select()
+            .single();
+
+          if (creatorError || !creatorData) {
+            throw creatorError || new Error("Failed to create creator branch");
+          }
+
+          const { data: partnerData, error: partnerError } = await supabase
+            .from("stories")
+            .insert(partnerStory)
+            .select()
+            .single();
+
+          if (partnerError || !partnerData) {
+            throw partnerError || new Error("Failed to create partner branch");
+          }
+
+          // Add initial prompt words to both stories (first 5 words)
+          if (prompt && prompt.trim()) {
+            const words = prompt.trim().split(/\s+/).slice(0, 5);
+
+            const creatorEntries = words.map((word, index) => ({
+              story_id: creatorData.id,
+              word,
+              user_id: user.id,
+              user_name: user.user_metadata?.name || "User",
+              user_color: "#D4A5A5",
+              timestamp: Date.now() + index,
+            }));
+
+            const partnerEntries = words.map((word, index) => ({
+              story_id: partnerData.id,
+              word,
+              user_id: partnerId,
+              user_name: "Partner",
+              user_color: "#85B79D",
+              timestamp: Date.now() + index,
+            }));
+
+            await supabase.from("story_entries").insert([...creatorEntries, ...partnerEntries]);
+          }
+
+          // Sync both stories
+          await get().syncStoryFromDB(creatorData.id);
+          await get().syncStoryFromDB(partnerData.id);
+
+          // Subscribe to both stories
+          get().subscribeToStory(creatorData.id);
+          get().subscribeToStory(partnerData.id);
+
+          set({ isLoading: false });
+
+          return {
+            parentPromptId,
+            creatorBranchId: creatorData.id,
+            partnerBranchId: partnerData.id,
+          };
+        } catch (error) {
+          console.error("Error creating branch story:", error);
+          set({ isLoading: false, error: (error as Error).message });
+          throw error;
+        }
+      },
+
+      getBranchStories: (parentPromptId: string) => {
+        return get().stories.filter(s => s.parentPromptId === parentPromptId);
+      },
+
+      mergeBranches: async (branch1Id: string, branch2Id: string) => {
+        const user = useAuthStore.getState().user;
+        if (!user) throw new Error("User not authenticated");
+
+        const branch1 = get().getStoryById(branch1Id);
+        const branch2 = get().getStoryById(branch2Id);
+
+        if (!branch1 || !branch2) {
+          throw new Error("One or both branches not found");
+        }
+
+        if (branch1.parentPromptId !== branch2.parentPromptId) {
+          throw new Error("Branches must be from the same prompt");
+        }
+
+        set({ isLoading: true, error: null });
+
+        try {
+          // Create a new classic story that combines elements from both branches
+          const mergedTitle = `Merged: ${branch1.title}`;
+          const mergedPrompt = `This story merges two perspectives. ${branch1.entries.slice(0, 3).map(e => e.word).join(" ")} meets ${branch2.entries.slice(0, 3).map(e => e.word).join(" ")}`;
+
+          const newStoryId = await get().createStory(
+            mergedTitle,
+            mergedPrompt,
+            branch1.theme,
+            branch1.mode
+          );
+
+          set({ isLoading: false });
+          return newStoryId;
+        } catch (error) {
+          console.error("Error merging branches:", error);
+          set({ isLoading: false, error: (error as Error).message });
+          throw error;
+        }
+      },
+
       generateStoryCode: (storyId: string) => {
         // Generate a simple 6-digit code from the story ID
         // In production, you might want to store this in the database
@@ -539,6 +712,9 @@ export const useStoryStore = create<StoryState>()(
             theme: s.theme || "romance",
             mode: s.mode || "standard",
             isPremium: s.is_premium || false,
+            collaborationType: s.collaboration_type || "classic",
+            parentPromptId: s.parent_prompt_id,
+            branchAuthorId: s.branch_author_id,
           }));
 
           set({ stories: storiesWithEntries, isLoading: false });
@@ -592,6 +768,9 @@ export const useStoryStore = create<StoryState>()(
             theme: story.theme || "romance",
             mode: story.mode || "standard",
             isPremium: story.is_premium || false,
+            collaborationType: story.collaboration_type || "classic",
+            parentPromptId: story.parent_prompt_id,
+            branchAuthorId: story.branch_author_id,
           };
 
           set(state => ({
