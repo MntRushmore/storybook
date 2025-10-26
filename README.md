@@ -86,50 +86,32 @@ A beautiful storytelling app where you can write stories with anyone, one word a
 
 ## 🛠 Setup Instructions
 
-### 1. Run Database Migrations
+### 1. Run Database Migration (REQUIRED!)
 
-The app requires additional database columns for story codes and Branch Mode to work. **Run these migrations in order:**
+**IMPORTANT:** The app requires database columns for Branch Mode and session codes to work.
 
-#### Step 1: Branch Mode Migration (NEW - Required for Branch Mode)
+#### Single Migration (Recommended - All-in-One)
 1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
-2. Copy and paste the SQL from `supabase-branch-mode-migration.sql`
+2. Copy and paste the **entire SQL** from `supabase-complete-branch-migration.sql`
 3. Click "Run"
+4. Verify success by checking the output
 
 This migration adds:
-- `collaboration_type` column (classic or branch)
-- `parent_prompt_id` column (links branch stories)
-- `branch_author_id` column (identifies branch author)
-- Indexes for better query performance
-- Constraints for data validation
+- ✅ `session_code` column (6-digit codes for joining)
+- ✅ `collaboration_type` column (classic or branch)
+- ✅ `parent_prompt_id` column (links branch stories)
+- ✅ `branch_author_id` column (identifies branch author)
+- ✅ Indexes for better query performance
+- ✅ Constraints for data validation
 
-**IMPORTANT**: This migration is required for Branch Mode to work!
+**Migration is safe to run multiple times** - it uses `IF NOT EXISTS` checks.
 
-#### Step 2: Base Migration (Choose one option)
+#### Alternative: Run Migrations Separately (Advanced)
+If you prefer to run migrations in steps:
+1. First run `supabase-migration-simple.sql` (base migration)
+2. Then run `supabase-branch-mode-migration.sql` (Branch Mode specific)
 
-#### Option A: Simple Migration (Recommended - No Root Access Needed)
-1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
-2. Copy and paste the SQL from `supabase-migration-simple.sql`
-3. Click "Run"
-
-This migration:
-- Adds new columns to existing tables (including session_code)
-- Creates user_stats table for streaks
-- Works without special permissions
-- Safe to run multiple times
-
-**IMPORTANT**: The session_code column is required for story codes to work!
-
-#### Option B: Full Migration (If You Have Admin Access)
-1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
-2. Copy and paste the SQL from `supabase-migration.sql`
-3. Click "Run"
-
-This includes everything in Option A plus:
-- Full table recreation with all constraints
-- Complete realtime setup
-- Advanced indexing
-
-**Note:** If you get permission errors, use Option A instead!
+**Note:** The single migration above includes everything you need!
 
 ### 2. RevenueCat Setup (Required for Premium)
 
