@@ -121,7 +121,7 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView className="flex-1 bg-[#FFF8F0]" edges={["top"]}>
         {/* Header */}
-        <View className="flex-row justify-between items-center px-6 pb-4">
+        <View className="flex-row justify-between items-center px-6 py-3">
           <Text className="text-2xl font-bold text-[#8B7355]">Go Premium</Text>
           <Pressable onPress={onClose} className="p-2">
             <Ionicons name="close" size={28} color="#8B7355" />
@@ -138,7 +138,7 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
             colors={["#D4A5A5", "#E8B4B8"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ borderRadius: 20, padding: 20, marginBottom: 20 }}
+            style={{ borderRadius: 20, padding: 24, marginBottom: 24 }}
           >
             <Text className="text-white text-2xl font-bold mb-2">✨ Unlock Everything</Text>
             <Text className="text-white/90 text-base">
@@ -150,10 +150,10 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
           <View className="mb-6">
             {features.map((feat, idx) => (
               <View key={idx} className="flex-row items-center mb-3">
-                <View className="w-7 h-7 rounded-full bg-[#D4A5A5] items-center justify-center mr-3">
-                  <Ionicons name="checkmark" size={18} color="#FFF8F0" />
+                <View className="w-6 h-6 rounded-full bg-[#D4A5A5] items-center justify-center mr-3">
+                  <Ionicons name="checkmark" size={16} color="#FFF8F0" />
                 </View>
-                <Text className="flex-1 text-[#8B7355] text-sm">{feat}</Text>
+                <Text className="flex-1 text-[#8B7355] text-[15px]">{feat}</Text>
               </View>
             ))}
           </View>
@@ -176,7 +176,7 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
           {/* Pricing Options */}
           {!loadingPackages && packages.length > 0 && (
             <>
-              <Text className="text-[#8B7355] font-bold text-base mb-3">Choose Your Plan</Text>
+              <Text className="text-[#8B7355] font-bold text-lg mb-4">Choose Your Plan</Text>
               <View className="mb-6">
                 {packages.map((pkg) => {
                   const isSelected = selectedPackage === pkg.identifier;
@@ -190,29 +190,31 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
                         isSelected ? "border-[#D4A5A5] bg-[#D4A5A5]/10" : "border-[#E8D5C5] bg-white"
                       }`}
                     >
-                      <View className="p-4">
-                        <View className="flex-row justify-between items-center">
-                          <View className="flex-1">
+                      <View className="p-5">
+                        <View className="flex-row justify-between items-start">
+                          <View className="flex-1 pr-4">
                             <View className="flex-row items-center mb-1">
-                              <Text className="text-[#8B7355] text-lg font-bold mr-2">
+                              <Text className="text-[#8B7355] text-lg font-bold">
                                 {pkg.product.title}
                               </Text>
-                              {isAnnual && (
-                                <View className="bg-[#85B79D] px-2 py-1 rounded-full">
-                                  <Text className="text-white text-xs font-bold">BEST VALUE</Text>
-                                </View>
-                              )}
                             </View>
-                            <Text className="text-[#A0927D] text-xs">
+                            <Text className="text-[#A0927D] text-sm mt-1">
                               {pkg.product.description}
                             </Text>
+                            {isAnnual && (
+                              <View className="mt-2">
+                                <View className="bg-[#85B79D] self-start px-3 py-1 rounded-full">
+                                  <Text className="text-white text-xs font-bold">BEST VALUE</Text>
+                                </View>
+                              </View>
+                            )}
                           </View>
-                          <View className="items-end ml-3">
-                            <Text className="text-[#8B7355] text-2xl font-bold">
+                          <View className="items-end">
+                            <Text className="text-[#8B7355] text-3xl font-bold">
                               {pkg.product.priceString}
                             </Text>
                             {isAnnual && (
-                              <Text className="text-[#85B79D] text-xs font-semibold">Save 40%</Text>
+                              <Text className="text-[#85B79D] text-sm font-semibold mt-1">Save 80%</Text>
                             )}
                           </View>
                         </View>
@@ -229,7 +231,7 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
             <Pressable
               onPress={handlePurchase}
               disabled={loading || !selectedPackage}
-              className={`rounded-2xl py-4 mb-3 shadow-lg ${
+              className={`rounded-2xl py-5 mb-4 shadow-lg ${
                 loading || !selectedPackage ? "bg-[#D4A5A5]/50" : "bg-[#D4A5A5]"
               }`}
             >
@@ -244,14 +246,14 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
           )}
 
           {/* Restore Button */}
-          <Pressable onPress={handleRestore} disabled={loading} className="py-3 mb-4">
-            <Text className="text-[#8B7355] text-center text-sm">
+          <Pressable onPress={handleRestore} disabled={loading} className="py-4 mb-4">
+            <Text className="text-[#8B7355] text-center text-base font-medium">
               Restore Previous Purchase
             </Text>
           </Pressable>
 
           {/* Fine Print */}
-          <Text className="text-[#A0927D] text-xs text-center">
+          <Text className="text-[#A0927D] text-xs text-center leading-5">
             Subscription automatically renews unless cancelled 24 hours before the end of the current period.
           </Text>
         </ScrollView>

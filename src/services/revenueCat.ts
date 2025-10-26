@@ -241,8 +241,8 @@ export async function getSubscriptionPackages() {
           product: {
             title: "Dear We Monthly",
             description: "Monthly subscription",
-            priceString: "$4.99",
-            price: 4.99,
+            priceString: "$1.99",
+            price: 1.99,
           },
           packageType: "MONTHLY",
         },
@@ -251,8 +251,8 @@ export async function getSubscriptionPackages() {
           product: {
             title: "Dear We Annual",
             description: "Annual subscription - Best Value",
-            priceString: "$29.99",
-            price: 29.99,
+            priceString: "$9.99",
+            price: 9.99,
           },
           packageType: "ANNUAL",
         },
