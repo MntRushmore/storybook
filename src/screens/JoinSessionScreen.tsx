@@ -8,6 +8,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStoryStore } from "../state/storyStore";
@@ -24,12 +25,15 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
   const insets = useSafeAreaInsets();
   const [storyCode, setStoryCode] = useState("");
   const [error, setError] = useState("");
+  const [debugInfo, setDebugInfo] = useState("");
+  const [showDebug, setShowDebug] = useState(false);
 
   const user = useAuthStore(s => s.user);
   const joinWithCode = useStoryStore(s => s.joinWithCode);
 
   const handleJoin = async () => {
     setError("");
+    setDebugInfo("");
 
     if (!user) {
       setError("Please sign in first");
@@ -41,8 +45,31 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
       return;
     }
 
+    // Capture console logs
+    const originalLog = console.log;
+    const originalError = console.error;
+    let logs: string[] = [];
+
+    console.log = (...args) => {
+      logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+      originalLog(...args);
+    };
+
+    console.error = (...args) => {
+      logs.push('ERROR: ' + args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+      originalError(...args);
+    };
+
     // Try to join story via code
     const result = await joinWithCode(storyCode);
+
+    // Restore console
+    console.log = originalLog;
+    console.error = originalError;
+
+    // Show debug info
+    setDebugInfo(logs.join('\n\n'));
+    setShowDebug(true);
 
     if (!result.success) {
       setError(result.error || "Failed to join. Check the code and try again.");
@@ -146,6 +173,35 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
           </View>
         </View>
       </TouchableWithoutFeedback>
+
+      {/* Debug Modal */}
+      <Modal
+        visible={showDebug}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowDebug(false)}
+      >
+        <View className="flex-1 bg-black/80 pt-20 px-4">
+          <View className="bg-white rounded-t-3xl flex-1 p-6">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-[#5D4E37] text-xl font-bold">
+                Debug Info
+              </Text>
+              <Pressable
+                onPress={() => setShowDebug(false)}
+                className="w-8 h-8 rounded-full bg-[#E8D5C4] items-center justify-center"
+              >
+                <Ionicons name="close" size={18} color="#8B7355" />
+              </Pressable>
+            </View>
+            <View className="flex-1 bg-gray-100 rounded-xl p-4">
+              <Text className="text-gray-800 text-xs font-mono">
+                {debugInfo || "No debug info available"}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
