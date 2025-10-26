@@ -1,9 +1,8 @@
 /**
  * RevenueCat Integration Service - PRODUCTION
- * Real implementation using react-native-purchases SDK
+ * Safe implementation with fallback for development
  */
 
-import Purchases, { LOG_LEVEL, PurchasesPackage } from "react-native-purchases";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { useAuthStore } from "../state/authStore";
@@ -13,6 +12,21 @@ const REVENUE_CAT_API_KEY = Constants.expoConfig?.extra?.revenueCatApiKey || pro
 const ENTITLEMENT_ID = "Pro";
 
 let isInitialized = false;
+let Purchases: any = null;
+
+// Safely import RevenueCat
+try {
+  const PurchasesModule = require("react-native-purchases");
+  Purchases = PurchasesModule.default;
+} catch (error) {
+  console.warn("⚠️ RevenueCat native module not available, using fallback mode");
+}
+
+export interface PurchaseResult {
+  success: boolean;
+  isPremium: boolean;
+  error?: string;
+}
 
 /**
  * Initialize RevenueCat SDK
@@ -28,13 +42,20 @@ export async function initializeRevenueCat(userId?: string) {
     console.log("🔄 Initializing RevenueCat...");
     console.log("API Key present:", !!REVENUE_CAT_API_KEY);
     console.log("User ID:", userId);
+    console.log("Native module available:", !!Purchases);
 
     if (!REVENUE_CAT_API_KEY) {
       console.error("⚠️ RevenueCat API key not found");
       return;
     }
 
-    Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
+    if (!Purchases) {
+      console.warn("⚠️ Using fallback mode - purchases will be simulated");
+      isInitialized = true;
+      return;
+    }
+
+    Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.INFO);
 
     await Purchases.configure({
       apiKey: REVENUE_CAT_API_KEY,
@@ -48,13 +69,9 @@ export async function initializeRevenueCat(userId?: string) {
     await checkPremiumStatus();
   } catch (error) {
     console.error("❌ RevenueCat initialization error:", error);
+    console.log("Using fallback mode");
+    isInitialized = true;
   }
-}
-
-export interface PurchaseResult {
-  success: boolean;
-  isPremium: boolean;
-  error?: string;
 }
 
 /**
@@ -64,6 +81,11 @@ export async function checkPremiumStatus(): Promise<boolean> {
   try {
     if (!isInitialized) {
       console.warn("RevenueCat not initialized");
+      return false;
+    }
+
+    if (!Purchases) {
+      // Fallback: check local storage or return false
       return false;
     }
 
@@ -96,6 +118,14 @@ export async function purchasePremium(packageIdentifier?: string): Promise<Purch
       };
     }
 
+    if (!Purchases) {
+      return {
+        success: false,
+        isPremium: false,
+        error: "RevenueCat not available in this environment. Please build a production app to test payments.",
+      };
+    }
+
     const offerings = await Purchases.getOfferings();
 
     if (!offerings.current?.availablePackages.length) {
@@ -108,7 +138,7 @@ export async function purchasePremium(packageIdentifier?: string): Promise<Purch
 
     // Find the requested package or default to annual
     let packageToPurchase = offerings.current.availablePackages.find(
-      (pkg: PurchasesPackage) => pkg.identifier === (packageIdentifier || "$rc_annual")
+      (pkg: any) => pkg.identifier === (packageIdentifier || "$rc_annual")
     );
 
     // If not found, use the first available package
@@ -156,6 +186,14 @@ export async function restorePurchases(): Promise<PurchaseResult> {
       };
     }
 
+    if (!Purchases) {
+      return {
+        success: false,
+        isPremium: false,
+        error: "RevenueCat not available in this environment",
+      };
+    }
+
     const customerInfo = await Purchases.restorePurchases();
     const isPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
 
@@ -194,6 +232,33 @@ export async function getSubscriptionPackages() {
       return [];
     }
 
+    if (!Purchases) {
+      console.warn("⚠️ RevenueCat native module not available");
+      // Return mock packages for development
+      return [
+        {
+          identifier: "$rc_monthly",
+          product: {
+            title: "Dear We Monthly",
+            description: "Monthly subscription",
+            priceString: "$4.99",
+            price: 4.99,
+          },
+          packageType: "MONTHLY",
+        },
+        {
+          identifier: "$rc_annual",
+          product: {
+            title: "Dear We Annual",
+            description: "Annual subscription - Best Value",
+            priceString: "$29.99",
+            price: 29.99,
+          },
+          packageType: "ANNUAL",
+        },
+      ];
+    }
+
     const offerings = await Purchases.getOfferings();
     console.log("Offerings fetched:", !!offerings);
     console.log("Current offering:", !!offerings.current);
@@ -204,7 +269,7 @@ export async function getSubscriptionPackages() {
       return [];
     }
 
-    const packages = offerings.current.availablePackages.map((pkg: PurchasesPackage) => {
+    const packages = offerings.current.availablePackages.map((pkg: any) => {
       console.log("Package:", pkg.identifier, pkg.product.title, pkg.product.priceString);
       return {
         identifier: pkg.identifier,

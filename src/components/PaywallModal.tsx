@@ -43,7 +43,7 @@ export function PaywallModal({ visible, onClose, onPurchaseSuccess, feature }: P
 
       // Set default selection to annual if available, otherwise first package
       if (pkgs.length > 0) {
-        const annualPkg = pkgs.find(p => p.identifier === "$rc_annual");
+        const annualPkg = pkgs.find((p: any) => p.identifier === "$rc_annual");
         if (annualPkg) {
           setSelectedPackage("$rc_annual");
         } else {
