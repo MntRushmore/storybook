@@ -7,7 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,24 +25,29 @@ export function SignUpScreen({ onSignInPress, onSuccess }: SignUpScreenProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorModal, setErrorModal] = useState<{ title: string; message: string } | null>(null);
 
   const signUp = useAuthStore(s => s.signUp);
 
+  const showError = (title: string, message: string) => {
+    setErrorModal({ title, message });
+  };
+
   const validateInputs = () => {
     if (!name.trim()) {
-      Alert.alert("Error", "Please enter your name");
+      showError("Error", "Please enter your name");
       return false;
     }
     if (!email.trim()) {
-      Alert.alert("Error", "Please enter your email");
+      showError("Error", "Please enter your email");
       return false;
     }
     if (!email.includes("@")) {
-      Alert.alert("Error", "Please enter a valid email address");
+      showError("Error", "Please enter a valid email address");
       return false;
     }
     if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters");
+      showError("Error", "Password must be at least 6 characters");
       return false;
     }
     return true;
@@ -60,9 +65,10 @@ export function SignUpScreen({ onSignInPress, onSuccess }: SignUpScreenProps) {
     setIsSubmitting(false);
 
     if (error) {
-      Alert.alert(
+      console.log("Sign up error:", error);
+      showError(
         "Sign Up Failed",
-        error.message || "An error occurred. Please try again."
+        error.message || "Database error saving new user"
       );
     } else {
       onSuccess();
@@ -207,6 +213,33 @@ export function SignUpScreen({ onSignInPress, onSuccess }: SignUpScreenProps) {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Error Modal */}
+      <Modal
+        visible={errorModal !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setErrorModal(null)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <View className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            <Text className="text-xl font-bold text-gray-900 mb-2 text-center">
+              {errorModal?.title}
+            </Text>
+            <Text className="text-base text-gray-600 mb-6 text-center">
+              {errorModal?.message}
+            </Text>
+            <Pressable
+              onPress={() => setErrorModal(null)}
+              className="bg-[#D4A5A5] rounded-2xl py-3"
+            >
+              <Text className="text-white text-center text-base font-semibold">
+                OK
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }

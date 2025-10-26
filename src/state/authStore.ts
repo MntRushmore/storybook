@@ -64,6 +64,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true });
 
+          console.log("Attempting sign up for:", email);
+
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -74,9 +76,12 @@ export const useAuthStore = create<AuthState>()(
             },
           });
 
+          console.log("Sign up response:", { data, error });
+
           if (error) {
+            console.error("Supabase sign up error:", error);
             set({ isLoading: false });
-            return { error };
+            return { error: new Error(error.message) };
           }
 
           // Create profile in profiles table (handled by trigger)
@@ -88,8 +93,10 @@ export const useAuthStore = create<AuthState>()(
 
           return { error: null };
         } catch (error) {
+          console.error("Sign up catch error:", error);
           set({ isLoading: false });
-          return { error: error as Error };
+          const message = error instanceof Error ? error.message : "An unexpected error occurred";
+          return { error: new Error(message) };
         }
       },
 
