@@ -197,11 +197,24 @@ export const useStoryStore = create<StoryState>()(
         }));
 
         try {
-          // Determine next turn
-          const nextTurnUserId =
-            story.partnerId && story.partnerId !== user.id
-              ? story.partnerId
-              : user.id;
+          // Determine next turn - switch to the OTHER person
+          let nextTurnUserId = user.id; // Default to current user if no partner
+
+          if (story.partnerId) {
+            // If there's a partner, switch to the other person
+            // Current user just added a word, so next turn goes to the other person
+            nextTurnUserId = user.id === story.creatorId
+              ? story.partnerId  // Current user is creator, give turn to partner
+              : story.creatorId;  // Current user is partner, give turn to creator
+          }
+
+          console.log("Turn logic:", {
+            currentUser: user.id,
+            creatorId: story.creatorId,
+            partnerId: story.partnerId,
+            currentTurn: story.currentTurnUserId,
+            nextTurn: nextTurnUserId
+          });
 
           const shouldFinish = story.entries.length + 1 >= story.maxWords;
 
