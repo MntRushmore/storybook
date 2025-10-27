@@ -43,6 +43,7 @@ export function StoryDetailScreen({
   const story = useStoryStore(s => s.getStoryById(storyId));
   const user = useAuthStore(s => s.user);
   const addWord = useStoryStore(s => s.addWord);
+  const submitBranchAnswer = useStoryStore(s => s.submitBranchAnswer);
   const finishStory = useStoryStore(s => s.finishStory);
   const deleteStory = useStoryStore(s => s.deleteStory);
   const generateStoryCode = useStoryStore(s => s.generateStoryCode);
@@ -73,8 +74,15 @@ export function StoryDetailScreen({
 
   const handleAddWord = async () => {
     const trimmedWord = newWord.trim();
-    if (trimmedWord) {
-      // Validate it's a single word
+    if (!trimmedWord) return;
+
+    if (isBranchMode) {
+      // Branch mode: submit full answer (can be multiple words)
+      await submitBranchAnswer(storyId, trimmedWord);
+      setNewWord("");
+      setShowInput(false);
+    } else {
+      // Classic mode: one word at a time
       const wordCount = trimmedWord.split(/\s+/).length;
       if (wordCount > 1) {
         // Show error - only one word allowed
@@ -287,28 +295,30 @@ export function StoryDetailScreen({
                 <View className="flex-row items-center justify-center">
                   <Ionicons name="create" size={24} color="white" />
                   <Text className="text-white font-bold text-lg ml-3">
-                    Add Your Word
+                    {isBranchMode ? "Answer the Prompt" : "Add Your Word"}
                   </Text>
                 </View>
               </Pressable>
             ) : (
               <View className="bg-white rounded-2xl p-5 shadow-md border-2 border-[#D4A5A5] mb-4">
                 <Text className="text-[#8B7355] font-bold text-base mb-3">
-                  {"What's your word?"}
+                  {isBranchMode ? "Type your answer to the prompt" : "What's your word?"}
                 </Text>
                 <TextInput
                   value={newWord}
                   onChangeText={setNewWord}
-                  placeholder="Type one word..."
+                  placeholder={isBranchMode ? "Type your full answer..." : "Type one word..."}
                   placeholderTextColor="#A0886C"
                   autoFocus
-                  autoCapitalize="none"
-                  autoCorrect={false}
+                  autoCapitalize="sentences"
+                  autoCorrect={true}
                   returnKeyType="done"
                   onSubmitEditing={handleAddWord}
-                  className="bg-[#FFF8F0] text-[#5D4E37] rounded-xl px-4 py-4 text-2xl font-semibold mb-3 border-2 border-[#E8D5C4] text-center"
+                  multiline={isBranchMode}
+                  numberOfLines={isBranchMode ? 4 : 1}
+                  className={`bg-[#FFF8F0] text-[#5D4E37] rounded-xl px-4 py-4 ${isBranchMode ? "text-base" : "text-2xl font-semibold"} mb-3 border-2 border-[#E8D5C4] ${isBranchMode ? "text-left" : "text-center"}`}
                 />
-                {newWord.trim().split(/\s+/).length > 1 && (
+                {!isBranchMode && newWord.trim().split(/\s+/).length > 1 && (
                   <View className="bg-red-50 rounded-xl p-3 mb-3 flex-row items-center">
                     <Ionicons name="warning" size={18} color="#DC2626" />
                     <Text className="text-red-600 text-sm ml-2 flex-1">
@@ -328,14 +338,16 @@ export function StoryDetailScreen({
                   </Pressable>
                   <Pressable
                     onPress={handleAddWord}
-                    disabled={!newWord.trim() || newWord.trim().split(/\s+/).length > 1}
+                    disabled={!newWord.trim() || (!isBranchMode && newWord.trim().split(/\s+/).length > 1)}
                     className={`flex-1 rounded-xl py-4 items-center ${
-                      newWord.trim() && newWord.trim().split(/\s+/).length === 1
+                      newWord.trim() && (isBranchMode || newWord.trim().split(/\s+/).length === 1)
                         ? "bg-[#D4A5A5]"
                         : "bg-[#E8D5C4]"
                     }`}
                   >
-                    <Text className="text-white font-bold text-base">Add Word</Text>
+                    <Text className="text-white font-bold text-base">
+                      {isBranchMode ? "Submit Answer" : "Add Word"}
+                    </Text>
                   </Pressable>
                 </View>
               </View>

@@ -16,6 +16,7 @@ interface StoryState {
   // Story actions
   createStory: (title?: string, prompt?: string, theme?: string, mode?: string) => Promise<string>;
   addWord: (storyId: string, word: string) => Promise<void>;
+  submitBranchAnswer: (storyId: string, answer: string) => Promise<void>;
   finishStory: (storyId: string) => Promise<void>;
   deleteStory: (storyId: string) => Promise<void>;
   revealStory: (storyId: string) => void;
@@ -306,6 +307,70 @@ export const useStoryStore = create<StoryState>()(
           // Revert optimistic update
           await get().syncStoryFromDB(storyId);
 
+          set({ isLoading: false, error: (error as Error).message });
+          throw error;
+        }
+      },
+
+      // Submit full answer for branch mode (not word-by-word)
+      submitBranchAnswer: async (storyId: string, answer: string) => {
+        const user = useAuthStore.getState().user;
+        if (!user) throw new Error("User not authenticated");
+
+        if (!answer || !answer.trim()) {
+          throw new Error("Answer cannot be empty");
+        }
+
+        const story = get().getStoryById(storyId);
+        if (!story) throw new Error("Story not found");
+
+        if (story.collaborationType !== "branch") {
+          throw new Error("This method is only for branch mode stories");
+        }
+
+        set({ isLoading: true, error: null });
+
+        try {
+          // Split answer into words and create entries
+          const words = answer.trim().split(/\s+/);
+
+          const entries = words.map((word, index) => ({
+            story_id: storyId,
+            word,
+            user_id: user.id,
+            user_name: user.user_metadata?.name || "User",
+            user_color: story.branchAuthorId === user.id ? "#D4A5A5" : "#85B79D",
+            timestamp: Date.now() + index,
+          }));
+
+          // Insert all entries at once
+          const { error: insertError } = await supabase
+            .from("story_entries")
+            .insert(entries);
+
+          if (insertError) throw insertError;
+
+          // Mark story as finished
+          const { error: updateError } = await supabase
+            .from("stories")
+            .update({
+              is_finished: true,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", storyId);
+
+          if (updateError) throw updateError;
+
+          // Update streak
+          const streakStore = useStreakStore.getState();
+          await streakStore.updateStreak(user.id);
+
+          // Sync from DB to get real data
+          await get().syncStoryFromDB(storyId);
+
+          set({ isLoading: false });
+        } catch (error) {
+          console.error("Error submitting branch answer:", error);
           set({ isLoading: false, error: (error as Error).message });
           throw error;
         }
