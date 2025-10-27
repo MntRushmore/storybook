@@ -67,6 +67,12 @@ export function StoryDetailScreen({
 
   const isBranchMode = story.collaborationType === "branch";
 
+  // For branch mode, separate prompt entries from answer entries
+  const promptWords = isBranchMode ? story.title.split(/\s+/) : [];
+  const promptWordCount = promptWords.length;
+  const promptEntries = isBranchMode ? story.entries.slice(0, promptWordCount) : [];
+  const answerEntries = isBranchMode ? story.entries.slice(promptWordCount) : story.entries;
+
   // Compute these values from story directly (avoid Zustand selector functions)
   // In branch mode, it's always the user's turn for their own branch
   const isMyTurn = isBranchMode ? story.branchAuthorId === user.id : story.currentTurnUserId === user.id;
@@ -184,15 +190,35 @@ export function StoryDetailScreen({
       </View>
 
       <ScrollView className="flex-1 px-6 pt-6 pb-4">
+        {/* Branch Mode Prompt Display */}
+        {isBranchMode && (
+          <View className="bg-gradient-to-br from-[#FFE5B4] to-[#FFD4A3] rounded-2xl p-5 mb-4 border-2 border-[#E8D5C4]">
+            <View className="flex-row items-center mb-3">
+              <View className="w-10 h-10 rounded-full bg-[#8B7355] items-center justify-center">
+                <Ionicons name="bulb" size={20} color="white" />
+              </View>
+              <Text className="ml-3 text-[#8B7355] font-bold text-base">Your Prompt</Text>
+            </View>
+            <Text className="text-[#5D4E37] text-lg leading-7 font-medium">
+              {story.title}
+            </Text>
+            <View className="mt-3 pt-3 border-t border-[#E8D5C4]">
+              <Text className="text-[#A0886C] text-xs italic">
+                Write your complete answer below. Your partner is writing their own version separately!
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Branch Mode Indicator */}
         {isBranchMode && (
           <View className="bg-[#85B79D] rounded-2xl p-4 mb-4">
             <View className="flex-row items-center justify-center mb-2">
               <Ionicons name="git-branch" size={20} color="white" />
-              <Text className="ml-2 font-bold text-white">Branch Mode</Text>
+              <Text className="ml-2 font-bold text-white">Branch Mode Active</Text>
             </View>
             <Text className="text-white/90 text-xs text-center">
-              Writing your own version. Your partner is writing theirs separately!
+              Both of you are answering the same prompt independently
             </Text>
           </View>
         )}
@@ -225,8 +251,8 @@ export function StoryDetailScreen({
           </View>
         )}
 
-        {/* Last 3 Words Preview */}
-        {lastThreeWords.length > 0 && !story.isFinished && (
+        {/* Last 3 Words Preview - Only for Classic Mode */}
+        {!isBranchMode && lastThreeWords.length > 0 && !story.isFinished && (
           <View className="bg-[#FFF8F0] rounded-2xl p-4 mb-4 border-2 border-[#E8D5C4]">
             <Text className="text-[#8B7355] text-xs font-semibold mb-2">
               LAST {lastThreeWords.length === 1 ? "WORD" : "WORDS"}
@@ -248,28 +274,38 @@ export function StoryDetailScreen({
             elevation: 2,
           }}
         >
-          {story.entries.length === 0 ? (
+          {isBranchMode && (
+            <View className="mb-4 pb-4 border-b border-[#E8D5C4]">
+              <Text className="text-[#8B7355] text-xs font-semibold mb-2 uppercase tracking-wide">
+                Your Answer
+              </Text>
+            </View>
+          )}
+
+          {answerEntries.length === 0 ? (
             <View className="items-center py-8">
               <Ionicons name="create-outline" size={48} color="#C8B4A0" />
               <Text className="text-[#A0886C] text-center mt-4">
-                Start your story by adding your first word below
+                {isBranchMode
+                  ? "Answer the prompt above with your own unique response"
+                  : "Start your story by adding your first word below"}
               </Text>
             </View>
           ) : (
             <>
               <Text className="text-[#5D4E37] text-lg leading-8 mb-6">
-                {story.entries.map((entry, index) => (
+                {answerEntries.map((entry, index) => (
                   <Text key={entry.id}>
                     <Text className="text-[#5D4E37]">{entry.word}</Text>
-                    {index < story.entries.length - 1 && " "}
+                    {index < answerEntries.length - 1 && " "}
                   </Text>
                 ))}
               </Text>
 
               <View className="border-t border-[#E8D5C4] pt-4">
                 <Text className="text-[#A0886C] text-xs">
-                  {story.entries.length}{" "}
-                  {story.entries.length === 1 ? "word" : "words"} •{" "}
+                  {answerEntries.length}{" "}
+                  {answerEntries.length === 1 ? "word" : "words"} •{" "}
                   {format(story.updatedAt, "MMM d, yyyy 'at' h:mm a")}
                 </Text>
               </View>

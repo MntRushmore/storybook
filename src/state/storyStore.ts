@@ -511,16 +511,16 @@ export const useStoryStore = create<StoryState>()(
             throw creatorError || new Error("Failed to create creator branch");
           }
 
-          // Add initial prompt words (first 5 words)
+          // Add initial prompt as entries (all words, not just first 5)
           if (prompt && prompt.trim()) {
-            const words = prompt.trim().split(/\s+/).slice(0, 5);
+            const words = prompt.trim().split(/\s+/);
 
             const creatorEntries = words.map((word, index) => ({
               story_id: creatorData.id,
               word,
               user_id: user.id,
               user_name: user.user_metadata?.name || "User",
-              user_color: "#D4A5A5",
+              user_color: "#8B7355", // Neutral color for prompt
               timestamp: Date.now() + index,
             }));
 
@@ -623,16 +623,16 @@ export const useStoryStore = create<StoryState>()(
             .update({ partner_id: user.id })
             .eq("id", creatorStory.id);
 
-          // Add initial prompt words to partner's branch (first 5 words)
+          // Add initial prompt to partner's branch (all words)
           if (creatorStory.title && creatorStory.title.trim()) {
-            const words = creatorStory.title.trim().split(/\s+/).slice(0, 5);
+            const words = creatorStory.title.trim().split(/\s+/);
 
             const partnerEntries = words.map((word: string, index: number) => ({
               story_id: partnerData.id,
               word,
               user_id: user.id,
               user_name: user.user_metadata?.name || "Partner",
-              user_color: "#85B79D",
+              user_color: "#8B7355", // Neutral color for prompt
               timestamp: Date.now() + index,
             }));
 

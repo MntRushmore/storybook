@@ -41,8 +41,15 @@ export function BranchComparisonScreen({ route, navigation }: Props) {
   const theme = userBranch.theme;
   const themeColors = THEMES[theme];
 
-  const userStoryText = userBranch.entries.map(e => e.word).join(" ");
-  const partnerStoryText = partnerBranch.entries.map(e => e.word).join(" ");
+  // Extract prompt and answers
+  const promptWords = userBranch.title.split(/\s+/);
+  const promptWordCount = promptWords.length;
+
+  const userAnswerEntries = userBranch.entries.slice(promptWordCount);
+  const partnerAnswerEntries = partnerBranch.entries.slice(promptWordCount);
+
+  const userAnswerText = userAnswerEntries.map(e => e.word).join(" ");
+  const partnerAnswerText = partnerAnswerEntries.map(e => e.word).join(" ");
 
   const handleMerge = async () => {
     try {
@@ -54,7 +61,7 @@ export function BranchComparisonScreen({ route, navigation }: Props) {
     }
   };
 
-  const renderStoryPanel = (story: Story, title: string, accentColor: string) => (
+  const renderStoryPanel = (answerEntries: typeof userAnswerEntries, title: string, accentColor: string) => (
     <View className="flex-1 bg-white/40 rounded-2xl p-4">
       <View className="flex-row items-center mb-3">
         <View style={{ backgroundColor: accentColor, width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", marginRight: 8 }}>
@@ -63,13 +70,13 @@ export function BranchComparisonScreen({ route, navigation }: Props) {
         <View>
           <Text className="text-[#5D4E37] font-bold">{title}</Text>
           <Text className="text-[#8B7355] text-xs">
-            {story.entries.length} {story.entries.length === 1 ? "word" : "words"}
+            {answerEntries.length} {answerEntries.length === 1 ? "word" : "words"}
           </Text>
         </View>
       </View>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <Text className="text-[#5D4E37] leading-6">
-          {story.entries.map(e => e.word).join(" ")}
+          {answerEntries.map(e => e.word).join(" ")}
         </Text>
       </ScrollView>
     </View>
@@ -112,6 +119,17 @@ export function BranchComparisonScreen({ route, navigation }: Props) {
             </Text>
           </Pressable>
         </View>
+
+        {/* Prompt Display */}
+        <View className="bg-[#FFE5B4] rounded-2xl p-4 mt-2 border border-[#E8D5C4]">
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="bulb" size={18} color="#8B7355" />
+            <Text className="text-[#8B7355] font-semibold ml-2 text-sm">Original Prompt</Text>
+          </View>
+          <Text className="text-[#5D4E37] leading-6">
+            {userBranch.title}
+          </Text>
+        </View>
       </View>
 
       {/* Story Content */}
@@ -124,9 +142,9 @@ export function BranchComparisonScreen({ route, navigation }: Props) {
         >
           {viewMode === "side-by-side" ? (
             <View className="flex-row flex-1 space-x-3">
-              {renderStoryPanel(userBranch, "Your Version", "#D4A5A5")}
+              {renderStoryPanel(userAnswerEntries, "Your Version", "#D4A5A5")}
               <View className="w-3" />
-              {renderStoryPanel(partnerBranch, "Partner Version", "#85B79D")}
+              {renderStoryPanel(partnerAnswerEntries, "Partner Version", "#85B79D")}
             </View>
           ) : (
             <View className="flex-1">
@@ -153,7 +171,7 @@ export function BranchComparisonScreen({ route, navigation }: Props) {
 
               {/* Active Story */}
               {renderStoryPanel(
-                activeView === "user" ? userBranch : partnerBranch,
+                activeView === "user" ? userAnswerEntries : partnerAnswerEntries,
                 activeView === "user" ? "Your Version" : "Partner Version",
                 activeView === "user" ? "#D4A5A5" : "#85B79D"
               )}
