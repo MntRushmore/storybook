@@ -106,6 +106,20 @@ This migration adds:
 
 **Migration is safe to run multiple times** - it uses `IF NOT EXISTS` checks.
 
+#### Fixing Missing Session Codes (If Stories Cannot Be Joined)
+
+If you created stories before running the migration, they may not have session codes. To fix this:
+
+1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
+2. Copy and paste the **entire SQL** from `fix-missing-session-codes.sql`
+3. Click "Run"
+4. This will generate unique 6-digit codes for all existing stories
+
+**Symptoms that indicate you need this fix:**
+- Error message: "Story not found. The story you're trying to join may have been created before session codes were added."
+- Cannot join branch mode stories even with the correct code
+- Debug info shows "Available codes: []"
+
 #### Alternative: Run Migrations Separately (Advanced)
 If you prefer to run migrations in steps:
 1. First run `supabase-migration-simple.sql` (base migration)

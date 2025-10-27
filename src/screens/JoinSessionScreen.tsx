@@ -143,11 +143,25 @@ export function JoinSessionScreen({ navigation }: JoinSessionScreenProps) {
                 style={{ letterSpacing: 8 }}
               />
               {error !== "" && (
-                <View className="bg-red-50 rounded-xl p-3 flex-row items-center">
-                  <Ionicons name="alert-circle" size={20} color="#DC2626" />
-                  <Text className="text-red-600 text-sm ml-2 flex-1">
-                    {error}
-                  </Text>
+                <View className="bg-red-50 rounded-xl p-4">
+                  <View className="flex-row items-start mb-2">
+                    <Ionicons name="alert-circle" size={20} color="#DC2626" />
+                    <Text className="text-red-600 text-sm ml-2 flex-1 font-semibold">
+                      {error}
+                    </Text>
+                  </View>
+                  {error.includes("created before session codes") && (
+                    <View className="mt-2 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <Text className="text-yellow-800 text-xs leading-5">
+                        💡 To fix this, ask the story creator to:{'\n'}
+                        1. Open their story{'\n'}
+                        2. Tap the share button{'\n'}
+                        3. Get the new 6-digit code{'\n'}
+                        {'\n'}
+                        Or create a new Branch Mode story together!
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
             </View>

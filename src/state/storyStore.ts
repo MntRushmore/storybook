@@ -699,21 +699,30 @@ export const useStoryStore = create<StoryState>()(
       },
 
       generateStoryCode: (storyId: string) => {
-        // Generate a simple 6-digit code from the story ID
-        // In production, you might want to store this in the database
         const story = get().getStoryById(storyId);
         if (!story) return "000000";
 
-        // Use session_code from database if available, otherwise generate from ID
+        // Use session_code from database if available
         if (story.sessionCode) return story.sessionCode;
 
-        // Create a numeric code from the story ID
-        let hash = 0;
-        for (let i = 0; i < storyId.length; i++) {
-          hash = ((hash << 5) - hash) + storyId.charCodeAt(i);
-          hash = hash & hash;
-        }
-        return Math.abs(hash).toString().slice(0, 6).padStart(6, "0");
+        // If no session code exists, generate one and update the database
+        const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Update database with the new code (async, but don't wait)
+        supabase
+          .from("stories")
+          .update({ session_code: newCode })
+          .eq("id", storyId)
+          .then(({ error }) => {
+            if (error) {
+              console.error("Failed to update session code:", error);
+            } else {
+              // Update local state
+              get().syncStoryFromDB(storyId);
+            }
+          });
+
+        return newCode;
       },
 
       joinWithCode: async (code: string) => {
@@ -726,20 +735,68 @@ export const useStoryStore = create<StoryState>()(
           // Trim and validate code
           const trimmedCode = code.trim();
 
+          console.log("==== JOIN WITH CODE DEBUG ====");
+          console.log("Attempting to join with code:", trimmedCode);
+          console.log("Code length:", trimmedCode.length);
+          console.log("Code type:", typeof trimmedCode);
+          console.log("Current user ID:", user.id);
+
+          // First, test query to see all stories with codes
+          const { data: allStoriesWithCodes, error: testError } = await supabase
+            .from("stories")
+            .select("id, session_code, collaboration_type, creator_id")
+            .not("session_code", "is", null);
+
+          console.log("Test query (all stories with codes):", allStoriesWithCodes || []);
+          console.log("Test query error:", testError);
+
           // Check if the code belongs to a branch story
           const { data: stories, error: searchError } = await supabase
             .from("stories")
             .select("*")
             .eq("session_code", trimmedCode);
 
+          console.log("Search result - stories:", stories || []);
+          console.log("Search result - error:", searchError);
+          console.log("Search result - count:", stories?.length || 0);
+
           if (searchError) {
+            console.log("❌ Database error occurred:", searchError);
             set({ isLoading: false, error: `Database error: ${searchError.message}` });
             return { success: false, error: `Database error: ${searchError.message}` };
           }
 
           if (!stories || stories.length === 0) {
-            set({ isLoading: false, error: "Invalid or expired code" });
-            return { success: false, error: "Invalid or expired code" };
+            console.log("❌ No story found with code:", trimmedCode);
+
+            // Additional debug: get available codes
+            const { data: availableCodes } = await supabase
+              .from("stories")
+              .select("session_code")
+              .not("session_code", "is", null)
+              .limit(10);
+
+            console.log("Available codes:", availableCodes || []);
+
+            // Check if there are any stories at all
+            const { count: totalStories } = await supabase
+              .from("stories")
+              .select("*", { count: "exact", head: true });
+
+            console.log("Total stories in database:", totalStories || 0);
+
+            // More helpful error message
+            let errorMessage = "Story not found. ";
+            if (totalStories === 0) {
+              errorMessage += "No stories exist yet.";
+            } else if (availableCodes?.length === 0) {
+              errorMessage += "The story you're trying to join may have been created before session codes were added. Please create a new story and share its code.";
+            } else {
+              errorMessage += "Check the code and try again.";
+            }
+
+            set({ isLoading: false, error: errorMessage });
+            return { success: false, error: errorMessage };
           }
 
           const story = stories[0];
