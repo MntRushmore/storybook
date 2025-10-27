@@ -26,14 +26,14 @@ function HomeTabs() {
           backgroundColor: "#FFF8F0",
           borderTopColor: "#E8D5C4",
           borderTopWidth: 1,
-          height: 70,
-          paddingBottom: 12,
-          paddingTop: 12,
+          height: 90,
+          paddingBottom: 20,
+          paddingTop: 16,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "600",
-          marginTop: 4,
+          marginTop: 6,
         },
       }}
     >
