@@ -108,9 +108,20 @@ export function StoryDetailScreen({
   };
 
   const handleDeleteStory = async () => {
-    await deleteStory(storyId);
-    setShowDeleteModal(false);
-    navigation.goBack();
+    try {
+      await deleteStory(storyId);
+      setShowDeleteModal(false);
+
+      // Navigate to Home screen instead of goBack
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate("Home");
+      }
+    } catch (error) {
+      console.error("Error deleting story:", error);
+      setShowDeleteModal(false);
+    }
   };
 
   const handleShare = async () => {
